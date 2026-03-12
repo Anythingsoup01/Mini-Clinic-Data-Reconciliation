@@ -4,34 +4,7 @@
 #include <filesystem>
 #include <fstream>
 
-#include <nlohmann/json.hpp>
-
-using json = nlohmann::json;
-
-void ProcessReceivedData(const std::string &rawBody) {
-  try {
-    json j = json::parse(rawBody);
-
-    std::cout << "--- Patient Context ---\n";
-
-    std::string age = j["patient_context"]["age"];
-    std::cout << "Age: "<< age << "\n";
-
-    std::cout << "Conditions: ";
-    for (auto &condition : j["patient_context"]["conditions"]) {
-      std::cout << "[" << condition << "] ";
-    }
-    std::cout << "\n";
-
-    std::cout << "--- Medication Sources ---" << std::endl;
-    for (const auto& source : j["sources"]) {
-      std::cout << "Source: " << source["system"] << " | Med: " << source["medication"] << "\n";
-    }
-
-  } catch (json::parse_error &e) {
-    std::cerr << "Failed to parse JSON: " << e.what() << "\n";
-  }
-}
+#include "llm_api.h"
 
 std::string ReadFile(const std::filesystem::path &filePath) {
   std::ifstream in(filePath, std::ios::binary);
@@ -48,13 +21,14 @@ std::string ReadFile(const std::filesystem::path &filePath) {
   return "";
 }
 
+static LlmAPI s_LLM;
+
 std::string HandleRoot(const std::string &jsonData) {
   return ReadFile("resources/html/reconcile/medication.html");
 }
 
 std::string HandleSubmit(const std::string &jsonData) {
-  ProcessReceivedData(jsonData);
-
+  s_LLM.ParseJSON(jsonData);
   return "HTTP/1.1 200 OK\r\n";
 }
 

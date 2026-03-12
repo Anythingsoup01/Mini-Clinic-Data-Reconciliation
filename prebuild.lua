@@ -14,12 +14,9 @@ Project = {
 
   includedirs = {
     "include",
-    "vendor/llama/include"
   },
 
   links = {
-    "llama"
+    "curl"
   }
 }
-
-External = "vendor/llama"
