@@ -1,0 +1,6 @@
+# Directories
+build/
+.cache/
+
+# Binaries
+prebuild
