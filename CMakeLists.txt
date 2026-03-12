@@ -3,7 +3,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 project(mini-clinic-wks LANGUAGES CXX)
 set(SRCS
     "src/main.cpp"
-    "src/webhost.cpp"
+    "src/webserver.cpp"
 )
 add_executable(mini-clinic ${SRCS})
 set_property(TARGET mini-clinic PROPERTY CXX_STANDARD 20)
