@@ -8,7 +8,7 @@ public:
   LlmAPI();
   ~LlmAPI();
 
-  std::string ParseJSON(const std::string &jsonBody);
+  std::string ParseJSON(const std::string &request, const std::string &jsonBody);
 private:
   CURL *m_CURL;
 };

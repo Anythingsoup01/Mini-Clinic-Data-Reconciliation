@@ -24,11 +24,21 @@ std::string ReadFile(const std::filesystem::path &filePath) {
 static LlmAPI s_LLM;
 
 std::string HandleRoot(const std::string &jsonData) {
-  return ReadFile("resources/html/reconcile/medication.html");
+  return ReadFile("resources/html/index.html");
 }
 
-std::string HandleSubmit(const std::string &jsonData) {
-  s_LLM.ParseJSON(jsonData);
+std::string HandleDebugReconcilePage(const std::string &jsonData) {
+  return ReadFile("resources/html/reconcile.html");
+}
+// TODO: Return a status from ParseJSON
+
+std::string HandleReconcileMedication(const std::string &jsonData) {
+  s_LLM.ParseJSON("RECONCILE", jsonData);
+  return "HTTP/1.1 200 OK\r\n";
+}
+
+std::string HandleValidateDataQuality(const std::string &jsonData) {
+  
   return "HTTP/1.1 200 OK\r\n";
 }
 
@@ -36,8 +46,12 @@ int main(void) {
 
   Webserver server(8080);
 
-  server.HandleRoute(_Method::GET, "/api/reconcile/medication", HandleRoot);
-  server.HandleRoute(_Method::POST, "/api/reconcile/medication", HandleSubmit);
+  server.HandleRoute(_Method::GET, "/api/home", HandleRoot);
+  server.HandleRoute(_Method::POST, "/api/reconcile/medication", HandleReconcileMedication);
+  server.HandleRoute(_Method::POST, "/api/validate/data_quality", HandleValidateDataQuality);
+
+  server.HandleRoute(_Method::GET, "/api/reconcile", HandleDebugReconcilePage);
+
 
   server.Run();
  

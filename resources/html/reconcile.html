@@ -10,105 +10,78 @@
   </header>
 
   <style>
-
-  .submit-or-add {
-    display: flex;
-    justify-content: center;
-    gap: 15px;
-  }
-
-  .tag-container {
-    padding: 5px;
-    display: flex;
-    flex-wrap: nowrap; 
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-    gap: 5px;
-    border-radius: 4px;
-    height: auto; 
-    width: 250px; 
-    align-items: center;
-    box-sizing: border-box; 
-    overflow-x: hidden;
-  }
-
-  #condition-input #labs-input {
-    border: none;
-    outline: none;
-    min-width: 80px; /* Minimum typing space */
-    padding: 5px;
-  }
-
-  .tag {
-    background: #007bff;
-    color: white;
-    padding: 4px 8px;
-    border-radius: 4px;
-    display: flex;
-  }
-
-  .remove-btn {
-    margin-left: 6px;
-    cursor: pointer;
-    font-weight: bold;
-    color: white;
-  }
+    /* Only keeping the essential "Tag" logic styling */
+    .tag-container { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
+    .tag { background: var(--pico-primary-background); color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; }
+    .remove-btn { margin-left: 6px; cursor: pointer; }
+    input[type="text"], input[type="number"] { margin-bottom: 0; } /* Tighten table cells */
+    .actions { display: flex; justify-content: center; gap: 10px; margin-top: 1rem; }
   </style>
 
   <body>
-    <div class="patient-info" id="patient-info-timeline">
+    <main class="container">
+      <hgroup>
+        <h1>Medication Reconciliation</h1>
+        <p>Patient Data Engine</p>
+      </hgroup>
 
-      <table id="patient-info">
-        <thead>
-          <tr>
-            <th>Age</th>
-            <th>Conditions</th>
-            <th>Recent Labs</th>
-          </tr>
-        </thead>
-        <tbody id="info-body">
-          <tr>
-            <td><input type="number" placeholder="0" id="patient-age"></td>
-            <td>
-              <div class="tag-container" id="condition-tags">
-                <input type="text" id="condition-input" placeholder="Condition">
-              </div>
+      <article>
+        <header>Patient Context</header>
+        <table id="patient-info">
+          <thead>
+            <tr>
+              <th style="width: 15%;">Age</th>
+              <th>Conditions</th>
+              <th>Recent Labs</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><input type="number" id="patient-age" placeholder="0"></td>
+              <td>
+                <div class="tag-container" id="condition-tags">
+                  <input type="text" id="condition-input" placeholder="Add...">
+                </div>
+              </td>
+              <td>
+                <div class="tag-container" id="lab-tags">
+                  <input type="text" id="lab-input" placeholder="Add...">
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </article>
 
-            </td>
-            <td>
-              <div class="tag-container" id="lab-tags">
-                <input type="text" id="lab-input" placeholder="Test, # Result">
-              </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+      <article>
+        <header>Source Systems</header>
+        <table id="medication-table">
+          <thead>
+            <tr>
+              <th>System</th>
+              <th>Medication & Dosage</th>
+              <th>Updated</th>
+              <th>Reliability</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="med-body">
+            <tr>
+              <td><input type="text" placeholder="Source"></td>
+              <td><input type="text" placeholder="Med/Dose"></td>
+              <td><input type="text" placeholder="YYYY-MM-DD"></td>
+              <td><input type="text" placeholder="High/Med/Low"></td>
+              <td></td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="actions">
+          <button class="outline secondary" onclick="addRow()">+ Add Source</button>
+          <button onclick="submitReconciliation()">Submit Selection</button>
+        </div>
+      </article>
+    </main>
 
-      <table id="medication-table">
-        <thead>
-          <tr>
-            <th>System</th>
-            <th>Medication</th>
-            <th>Last Updated</th>
-            <th>Reliability</th>
-          </tr>
-        </thead>
-        <tbody id="med-body">
-          <tr>
-            <td><input type="text" placeholder="Source System" id="system-source"></td>
-            <td><input type="text" placeholder="Medication & Dosage" id="medication-info"></td>
-            <td><input type="text" placeholder="YYYY-MM-DD" id="update-date"></td>
-            <td><input type="text" placeholder="Reliability" id="reliability"></td>
-          </tr>
-        </tbody>
-      </table>
-      <div class="submit-or-add">
-        <button type="button" onclick="addRow()">+ Add Source</button>
-        <button type="button" onclick="submitReconciliation()">Submit Selection</button>
-      </div>
-    </div>
-
-    
     <script>
     function addRow() {
       const tbody = document.getElementById('med-body');
