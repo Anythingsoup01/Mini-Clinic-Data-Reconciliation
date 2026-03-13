@@ -27,8 +27,8 @@ std::string HandleRoot(const std::string &jsonData) {
   return ReadFile("resources/html/index.html");
 }
 
-std::string HandleDebugReconcilePage(const std::string &jsonData) {
-  return ReadFile("resources/html/reconcile.html");
+std::string HandleDebugPage(const std::string &jsonData) {
+  return ReadFile("resources/html/debug.html");
 }
 // TODO: Return a status from ParseJSON
 
@@ -50,7 +50,7 @@ int main(void) {
   server.HandleRoute(_Method::POST, "/api/reconcile/medication", HandleReconcileMedication);
   server.HandleRoute(_Method::POST, "/api/validate/data_quality", HandleValidateDataQuality);
 
-  server.HandleRoute(_Method::GET, "/api/reconcile", HandleDebugReconcilePage);
+  server.HandleRoute(_Method::GET, "/api/debug", HandleDebugPage);
 
 
   server.Run();

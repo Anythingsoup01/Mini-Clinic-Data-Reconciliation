@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Clinical Reconciliation</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+  <style>
+    .tag-container { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; border: 1px solid var(--pico-form-element-border-color); padding: 0.5rem; border-radius: 4px; min-height: 50px; }
+    .tag { background: var(--pico-primary); color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; }
+    .remove-btn { margin-left: 6px; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <main class="container">
+    <h1>Clinical Reconciliation</h1>
+
+    <article>
+      <header><strong>Patient Information</strong></header>
+      <div class="grid">
+        <label>Name<input type="text" id="p-name" placeholder="Full Name"></label>
+        <label>DOB<input type="date" id="p-dob"></label>
+        <label>Gender
+          <select id="p-gender">
+            <option>Select...</option>
+            <option>Male</option>
+            <option>Female</option>
+            <option>Other</option>
+          </select>
+        </label>
+      </div>
+    </article>
+
+    <div class="grid">
+      <article>
+        <header><strong>Conditions</strong></header>
+        <div class="tag-container" id="condition-tags">
+          <input type="text" id="condition-input" placeholder="Add...">
+        </div>
+      </article>
+      <article>
+        <header><strong>Allergies</strong></header>
+        <div class="tag-container" id="allergy-tags">
+          <input type="text" id="allergy-input" placeholder="Add...">
+        </div>
+      </article>
+    </div>
+
+    <div class="grid">
+      <article>
+        <header><strong>Medications</strong></header>
+        <div class="tag-container" id="med-tags">
+          <input type="text" id="med-input" placeholder="Add...">
+        </div>
+      </article>
+      <article>
+        <header><strong>Last Updated</strong></header>
+        <input type="date" id="last-updated">
+      </article>
+    </div>
+
+    <button onclick="submitReconciliation()">Complete Reconciliation</button>
+  </main>
+
+  <script>
+    function setupTags(inputId, containerId) {
+      const input = document.getElementById(inputId);
+      const container = document.getElementById(containerId);
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && input.value.trim() !== "") {
+          e.preventDefault();
+          createTag(input.value.trim(), container, input);
+          input.value = "";
+        } else if (e.key === 'Backspace' && input.value === "") {
+          // Find the last .tag element inside the container
+          const tags = container.querySelectorAll('.tag');
+          if (tags.length > 0) {
+            tags[tags.length - 1].remove();
+          }
+        }
+      });
+    }
+
+    function createTag(text, container, input) {
+      const tag = document.createElement('span');
+      tag.className = 'tag';
+      tag.innerHTML = `${text} <span class="remove-btn" onclick="this.parentElement.remove()">x</span>`;
+      container.insertBefore(tag, input);
+    }
+
+    setupTags("condition-input", "condition-tags");
+    setupTags("allergy-input", "allergy-tags");
+    setupTags("med-input", "med-tags");
+
+    async function submitReconciliation() {
+      const getTags = (id) => Array.from(document.querySelectorAll(`#${id} .tag`)).map(t => t.innerText.replace('x', '').trim());
+      
+      const data = {
+        name: document.getElementById("p-name").value,
+        dob: document.getElementById("p-dob").value,
+        conditions: getTags("condition-tags"),
+        allergies: getTags("allergy-tags"),
+        medications: getTags("med-tags"),
+        last_updated: document.getElementById("last-updated").value
+      };
+
+      try {
+        response = await fetch('/api/validate/data_quality', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+
+        if (!response.ok) {
+          alert("Server error: " + response.status);
+        }
+      }
+      catch (error) {
+        console.error("Fetch error: ", error);
+      }
+    }
+
+  </script>
+</body>
+</html>

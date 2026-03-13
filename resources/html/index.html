@@ -133,8 +133,8 @@
           tbody.appendChild(newRow);
         }
 
-        const condition_input = document.getElementById("condition-input");
-        const condition_container = document.getElementById("condition-tags");
+        const condition_input = document.getElementById("reconcile-condition-input");
+        const condition_container = document.getElementById("reconcile-condition-tags");
 
         condition_input.addEventListener('keydown', (e) => {
           // Check condition_input, not 'input'
@@ -169,26 +169,18 @@
           }
         });
 
-        function createTag(text, container, input) {
-          const tag = document.createElement('span');
-          tag.className = 'tag';
-          tag.innerHTML = `${text} <span class="remove-btn" onclick="this.parentElement.remove()">x</span>`;
-          container.insertBefore(tag, input);
-        }
-
-
         function captureData() {
 
           const patientData = {
             patient_context: {
-              age: document.getElementById("patient-age").value,
-              conditions: Array.from(document.querySelectorAll("#condition-tags .tag")).map(t => t.textContent.replace('x', '').trim()),
-              recent_labs: Array.from(document.querySelectorAll("#lab-tags .tag")).map(t => t.textContent.replace('x', '').trim())
+              age: document.getElementById("reconcile-patient-age").value,
+              conditions: Array.from(document.querySelectorAll("#reconcile-condition-tags .tag")).map(t => t.textContent.replace('x', '').trim()),
+              recent_labs: Array.from(document.querySelectorAll("#reconcile-lab-tags .tag")).map(t => t.textContent.replace('x', '').trim())
             },
             sources: []
           };
 
-          const rows = document.querySelectorAll('#med-body tr');
+          const rows = document.querySelectorAll('#reconcile-med-body tr');
 
           rows.forEach(row => {
             const inputs = row.querySelectorAll('input');
@@ -237,6 +229,72 @@
         </article>
       </section>
     </main>
+
+    <script>
+    function setupTags(inputId, containerId) {
+      const input = document.getElementById(inputId);
+      const container = document.getElementById(containerId);
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && input.value.trim() !== "") {
+          e.preventDefault();
+          createTag(input.value.trim(), container, input);
+          input.value = "";
+        } else if (e.key === 'Backspace' && input.value === "") {
+          // Find the last .tag element inside the container
+          const tags = container.querySelectorAll('.tag');
+          if (tags.length > 0) {
+            tags[tags.length - 1].remove();
+          }
+        }
+      });
+    }
+
+    function createTag(text, container, input) {
+      const tag = document.createElement('span');
+      tag.className = 'tag';
+      tag.innerHTML = `${text} <span class="remove-btn" onclick="this.parentElement.remove()">x</span>`;
+      container.insertBefore(tag, input);
+    }
+
+
+    setupTags("reconcile-condition-input", "reconcile-condition-tags");
+    setupTags("reconcile-lab-input", "reconcile-lab-tags");
+
+
+    setupTags("validate-condition-input", "validate-condition-tags");
+    setupTags("validate-allergy-input", "validate-allergy-tags");
+    setupTags("validate-med-input", "validate-med-tags");
+
+    async function submitValidation() {
+      const getTags = (id) => Array.from(document.querySelectorAll(`#${id} .tag`)).map(t => t.innerText.replace('x', '').trim());
+      
+      const data = {
+        name: document.getElementById("validate-name").value,
+        dob: document.getElementById("validate-dob").value,
+        conditions: getTags("validate-condition-tags"),
+        allergies: getTags("validate-allergy-tags"),
+        medications: getTags("validate-med-tags"),
+        last_updated: document.getElementById("validate-last-updated").value
+      };
+
+      try {
+        response = await fetch('/api/validate/data_quality', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+
+        if (!response.ok) {
+          alert("Server error: " + response.status);
+        }
+      }
+      catch (error) {
+        console.error("Fetch error: ", error);
+      }
+    }
+
+  </script>
+
 
     <footer class="container">
       <small><a href="#">Documentation</a> • <a href="#">Privacy Policy</a></small>
