@@ -45,7 +45,7 @@ std::string HandleReconcileMedication(const std::string &jsonData) {
 }
 
 std::string HandleValidateDataQuality(const std::string &jsonData) {
-  
+  s_LLM.ParseJSON("VALIDATE", jsonData);
   return "HTTP/1.1 200 OK\r\n";
 }
 
@@ -74,9 +74,9 @@ int main(void) {
     return -1;
   }
 
-  s_LLM.Init();
+  s_LLM.Init(config.ApiKey);
 
-  Webserver server(8080);
+  Webserver server(config.Port);
 
   server.HandleRoute(_Method::GET, "/api/home", HandleRoot);
   server.HandleRoute(_Method::POST, "/api/reconcile/medication", HandleReconcileMedication);

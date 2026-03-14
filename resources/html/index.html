@@ -111,50 +111,56 @@
       <section id="validate" class="page-content">
         <h2>Data Validation</h2>
         <article>
-      <header><strong>Patient Information</strong></header>
-      <div class="grid">
-        <label>Name<input type="text" id="validate-patient-name" placeholder="Full Name"></label>
-        <label>DOB<input type="text" id="validate-patient-dob" placeholder="YYYY-MM-DD"></label>
-        <label>Gender
-          <select id="validate-patient-gender">
-            <option>Select...</option>
-            <option>Male</option>
-            <option>Female</option>
-            <option>Other</option>
-          </select>
-        </label>
-      </div>
-    </article>
+          <header><strong>Patient Information</strong></header>
+          <div class="grid">
+            <label>Name<input type="text" id="validate-patient-name" placeholder="Full Name"></label>
+            <label>DOB<input type="text" id="validate-patient-dob" placeholder="YYYY-MM-DD"></label>
+            <label>Gender
+              <select id="validate-patient-gender">
+                <option>Select...</option>
+                <option>Male</option>
+                <option>Female</option>
+                <option>Other</option>
+              </select>
+            </label>
+          </div>
+        </article>
 
-    <div class="grid">
-      <article>
-        <header><strong>Conditions</strong></header>
-        <div class="tag-container" id="validate-condition-tags">
-          <input type="text" id="validate-condition-input" placeholder="Add...">
+        <div class="grid">
+          <article>
+            <header><strong>Conditions</strong></header>
+            <div class="tag-container" id="validate-condition-tags">
+              <input type="text" id="validate-condition-input" placeholder="Type 2 Diabetes...">
+            </div>
+          </article>
+          <article>
+            <header><strong>Allergies</strong></header>
+            <div class="tag-container" id="validate-allergy-tags">
+              <input type="text" id="validate-allergy-input" placeholder="Peanuts...">
+            </div>
+          </article>
+          <article>
+            <header><strong>Medications</strong></header>
+            <div class="tag-container" id="validate-med-tags">
+              <input type="text" id="validate-med-input" placeholder="Metformin 500mg...">
+            </div>
+          </article>
         </div>
-      </article>
-      <article>
-        <header><strong>Allergies</strong></header>
-        <div class="tag-container" id="validate-allergy-tags">
-          <input type="text" id="validate-allergy-input" placeholder="Add...">
-        </div>
-      </article>
-    </div>
 
-    <div class="grid">
-      <article>
-        <header><strong>Medications</strong></header>
-        <div class="tag-container" id="validate-med-tags">
-          <input type="text" id="validate-med-input" placeholder="Add...">
+        <div class="grid">
+          <article>
+            <header><strong>Vitals</strong></header>
+            <div class="tag-container" id="validate-vitals-tags">
+              <input type="text" id="validate-vitals-input" placeholder="Blood Preasure 340/180...">
+            </div>
+          </article>
+          <article>
+            <header><strong>Last Updated</strong></header>
+            <input type="text" id="validate-last-updated" placeholder="YYYY-MM-DD">
+          </article>
         </div>
-      </article>
-      <article>
-        <header><strong>Last Updated</strong></header>
-        <input type="text" id="validate-last-updated" placeholder="YYYY-MM-DD">
-      </article>
-    </div>
 
-    <button onclick="submitValidation()">Complete Reconciliation</button>
+        <button onclick="submitValidation()">Complete Reconciliation</button>
       </section>
     </main>
 
@@ -192,6 +198,7 @@
     setupTags("validate-condition-input", "validate-condition-tags");
     setupTags("validate-allergy-input", "validate-allergy-tags");
     setupTags("validate-med-input", "validate-med-tags");
+    setupTags("validate-vitals-input", "validate-vitals-tags");
 
     async function submitValidation() {
       const getTags = (id) => Array.from(document.querySelectorAll(`#${id} .tag`)).map(t => t.innerText.replace('x', '').trim());
@@ -296,6 +303,7 @@
         conditions: getTags("validate-condition-tags"),
         allergies: getTags("validate-allergy-tags"),
         medications: getTags("validate-med-tags"),
+        vitals: getTags("validate-vitals-tags"),
         last_updated: document.getElementById("validate-last-updated").value
       };
 

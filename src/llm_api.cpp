@@ -6,6 +6,8 @@
 #include <sstream>
 #include <iomanip>
 
+#include <ctime>
+
 size_t WriteCallback(void* contents, size_t size, size_t nmemb, std::string* s) {
     s->append((char*)contents, size * nmemb);
     return size * nmemb;
@@ -98,9 +100,10 @@ std::string LlmAPI::ParseJSON(const std::string &request, const std::string &jso
       Clinical Plausibility: Integer (0-100) (How plausible this information is)
     }
     Issues Detected: List[Dict[String -> String]] {
-      Field: String (This pertains to all the aformentioned information, Alergies, vital signs, and ends with Last Updated),
+      CRITICAL INSTRUCTION: Demographics don't count as fields. All fields need to be lowercased and use '_' for any spaces only for the field. After all fields are noted. The following fields pertain to the aformentioned information, only list important fields. If the data pertains to Vitals, the field name needs to be as followed "vital_sign.'field'", this only applies to vitals. Add last_updated to the very end, and display how many months are have gone by from the provided date, this should look as followed "Data is #+ months old", if the data is half a year or higher that is a medium Severity a year or more is high.
+      Field: String,
       Issue: String (What about the field is the issue, if there is no documented items you must state "No 'field'(s) documented - likely incomplete")
-      Severity: String (How severe the issue is)
+      Severity: String (How severe the issue is from low - high)
     }
     Input Data:
 
@@ -111,6 +114,15 @@ std::string LlmAPI::ParseJSON(const std::string &request, const std::string &jso
 
     std::string prompt = request == "RECONCILE" ? reconcilePrompt : validatePrompt;
     prompt += jsonBody;
+
+    std::time_t now = std::time(nullptr); // time(NULL) also works
+
+    std::tm* local_time = std::localtime(&now);
+
+    char buffer[80];
+    std::strftime(buffer, sizeof(buffer), "%Y-%m-%d", local_time); // Format: YYYY-MM-DD
+
+    prompt += "\n\nCurrent Date:\nYYYY-MM-DD\n" + std::string(buffer);
 
     std::string json_body = "{\"contents\":[{\"parts\":[{\"text\":\"" + json_escape(prompt) + "\"}]}]}";
 
@@ -124,8 +136,6 @@ std::string LlmAPI::ParseJSON(const std::string &request, const std::string &jso
     curl_easy_setopt(m_CURL, CURLOPT_WRITEDATA, &readBuffer);
 
     curl_easy_perform(m_CURL);
-
-    std::cout << readBuffer << "\n";
 
     try {
       auto j = nlohmann::json::parse(readBuffer);
