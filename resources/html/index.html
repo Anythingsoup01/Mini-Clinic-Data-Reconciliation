@@ -1,25 +1,23 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
+  <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Clinical Data Engine</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
-    
-    <style>
-      /* Small CSS tweaks to handle the "Single Page" switching */
-      .page-content { display: none; }
-      .page-content.active { display: block; }
 
-      /* Ensure the footer stays at the bottom */
-      body { min-height: 100vh; display: flex; flex-direction: column; }
-      main { flex: 1; }
-      /* Only keeping the essential "Tag" logic styling */
-      .tag-container { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
-      .tag { background: var(--pico-primary-background); color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; }
+    <style>
+    .page-content { display: none; }
+    .page-content.active { display: block; }
+
+    body { min-height: 100vh; display: flex; flex-direction: column; }
+    main { flex: 1; }
+
+    .tag-container { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; border: 1px solid var(--pico-form-element-border-color); padding: 0.5rem; border-radius: 4px; min-height: 50px; }
+    .tag { background: var(--pico-primary); color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; }
     .remove-btn { margin-left: 6px; cursor: pointer; }
-      input[type="text"], input[type="number"] { margin-bottom: 0; } /* Tighten table cells */
-      .actions { display: flex; justify-content: center; gap: 10px; margin-top: 1rem; }
+    input, select { margin-bottom: 0 !important; }
+    .actions { display: flex; justify-content: center; gap: 10px; margin-top: 1rem; }
     </style>
   </head>
   <body>
@@ -31,8 +29,8 @@
         </ul>
         <ul>
           <li><a href="#" onclick="showPage('dashboard')">Dashboard</a></li>
-                <li><a href="#" onclick="showPage('reconcile')">Reconcile</a></li>
-          <li><a href="#" onclick="showPage('validate')" class="outline" role="button">Validate</a></li>
+          <li><a href="#" onclick="showPage('reconcile')">Reconcile</a></li>
+          <li><a href="#" onclick="showPage('validate')">Validate</a></li>
         </ul>
       </nav>
     </header>
@@ -41,192 +39,122 @@
       <section id="dashboard" class="page-content active">
         <hgroup>
           <h1>Welcome, Practitioner</h1>
+          <p>System Status: Ready</p>
         </hgroup>
-            <article>
+        <article>
           <header>Overview</header>
           This engine is designed to reconcile medication records and validate clinical data integrity.
-          <footer>Select a tool from the menu to begin.</footer>
         </article>
       </section>
 
       <section id="reconcile" class="page-content">
-        <h2>Reconcile Records</h2>
-        <article>
-          <p>Use this tool to compare patient medication lists against the pharmacy database.</p>
-        </article>
-        <main class="container">
-          <hgroup>
-            <h1>Medication Reconciliation</h1>
-            <p>Patient Data Engine</p>
-          </hgroup>
+        <hgroup>
+          <h1>Medication Reconciliation</h1>
+          <p>Patient Data Engine</p>
+        </hgroup>
 
+        <div class="grid">
           <article>
-            <header>Patient Context</header>
-            <table id="patient-info">
-              <thead>
-                <tr>
-                  <th style="width: 15%;">Age</th>
-                  <th>Conditions</th>
-                  <th>Recent Labs</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td><input type="number" id="patient-age" placeholder="0"></td>
-                  <td>
-                    <div class="tag-container" id="condition-tags">
-                      <input type="text" id="condition-input" placeholder="Add...">
-                    </div>
-                  </td>
-                  <td>
-                    <div class="tag-container" id="lab-tags">
-                      <input type="text" id="lab-input" placeholder="Add...">
-                    </div>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+            <header><strong>Age</strong></header>
+            <input type="number" id="reconcile-patient-age" placeholder="0">
           </article>
-
           <article>
-            <header>Source Systems</header>
-            <table id="medication-table">
-              <thead>
-                <tr>
-                  <th>System</th>
-                  <th>Medication & Dosage</th>
-                  <th>Updated</th>
-                  <th>Reliability</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody id="med-body">
-                <tr>
-                  <td><input type="text" placeholder="Source"></td>
-                  <td><input type="text" placeholder="Med/Dose"></td>
-                  <td><input type="text" placeholder="YYYY-MM-DD"></td>
-                  <td><input type="text" placeholder="High/Med/Low"></td>
-                  <td></td>
-                </tr>
-              </tbody>
-            </table>
-            <div class="actions">
-              <button class="outline secondary" onclick="addRow()">+ Add Source</button>
-              <button onclick="submitReconciliation()">Submit Selection</button>
+            <header><strong>Conditions</strong></header>
+            <div class="tag-container" id="reconcile-condition-tags">
+              <input type="text" id="reconcile-condition-input" placeholder="Add condition...">
             </div>
+
           </article>
-        </main>
 
-        <script>
-        function addRow() {
-          const tbody = document.getElementById('med-body');
-          const newRow = document.createElement('tr');
+          <article>
+            <header><strong>Lab Results</strong></header>
+            <div class="tag-container" id="reconcile-lab-tags">
+              <input type="text" id="reconcile-lab-input" placeholder="Add test...">
+            </div> 
+            </<article>
+        </div>
 
-          newRow.innerHTML = `
-            <td><input type="text" placeholder="Source System" id="system-source"></td>
-            <td><input type="text" placeholder="Medication & Dosage" id="medication-info"></td>
-            <td><input type="text" placeholder="YYYY-MM-DD" id="update-date"></td>
-            <td><input type="text" placeholder="Reliability" id="reliability"></td>
-            <td><button type="button" onclick="this.parentElement.parentElement.remove()">Remove</button></td>
-          `;
-    
-          tbody.appendChild(newRow);
-        }
-
-        const condition_input = document.getElementById("reconcile-condition-input");
-        const condition_container = document.getElementById("reconcile-condition-tags");
-
-        condition_input.addEventListener('keydown', (e) => {
-          // Check condition_input, not 'input'
-          if (e.key === 'Enter' && condition_input.value.trim() !== "") {
-            e.preventDefault();
-            createTag(condition_input.value.trim(), condition_container, condition_input);
-            condition_input.value = "";
-          } else if (e.key === 'Backspace' && condition_input.value === "") {
-            // Find the last .tag element inside the container
-            const tags = condition_container.querySelectorAll('.tag');
-            if (tags.length > 0) {
-              tags[tags.length - 1].remove();
-            }
-          }
-        });
-
-        const lab_input = document.getElementById("lab-input");
-        const lab_container = document.getElementById("lab-tags");
-
-        lab_input.addEventListener('keydown', (e) => {
-          // Check condition_input, not 'input'
-          if (e.key === 'Enter' && lab_input.value.trim() !== "") {
-            e.preventDefault();
-            createTag(lab_input.value.trim(), lab_container, lab_input);
-            lab_input.value = "";
-          } else if (e.key === 'Backspace' && lab_input.value === "") {
-            // Find the last .tag element inside the container
-            const tags = lab_container.querySelectorAll('.tag');
-            if (tags.length > 0) {
-              tags[tags.length - 1].remove();
-            }
-          }
-        });
-
-        function captureData() {
-
-          const patientData = {
-            patient_context: {
-              age: document.getElementById("reconcile-patient-age").value,
-              conditions: Array.from(document.querySelectorAll("#reconcile-condition-tags .tag")).map(t => t.textContent.replace('x', '').trim()),
-              recent_labs: Array.from(document.querySelectorAll("#reconcile-lab-tags .tag")).map(t => t.textContent.replace('x', '').trim())
-            },
-            sources: []
-          };
-
-          const rows = document.querySelectorAll('#reconcile-med-body tr');
-
-          rows.forEach(row => {
-            const inputs = row.querySelectorAll('input');
-            patientData.sources.push({
-              system: inputs[0].value,
-              medication: inputs[1].value,
-              last_updated: inputs[2].value,
-              source_reliability: inputs[3].value
-            });
-          });
-          return patientData;
-        }
-
-        async function submitReconciliation() {
-          const data = captureData();
-
-          try {
-            response = await fetch('/api/reconcile/medication', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(data)
-            });
-
-            if (response.ok) {
-              alert("Data submitted");
-            } else {
-              alert("Server error: " + response.status);
-            }
-          }
-          catch (error) {
-            console.error("Fetch error: ", error);
-          }
-        }
-
-        </script>
+        <article>
+          <header><strong>Systems</strong></header>
+          <table id="medication-table">
+            <thead>
+              <tr>
+                <th>System</th>
+                <th>Medication & Dosage</th>
+                <th>Updated</th>
+                <th>Reliability</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="reconcile-med-body">
+              <tr>
+                <td><input type="text" placeholder="Source System" id="system-source"></td>
+                <td><input type="text" placeholder="Medication & Dosage" id="medication-info"></td>
+                <td><input type="text" placeholder="YYYY-MM-DD" id="update-date"></td>
+                <td><select>
+                  <option>Select...</option>
+                  <option>Low</option>
+                  <option>Medium</option>
+                  <option>High</option>
+                </select></td>
+                <td></td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="actions">
+            <button class="outline secondary" onclick="addReconcileRow()">+ Add Source</button>
+            <button onclick="submitReconciliation()">Submit Selection</button>
+          </div>
+        </article>
       </section>
 
       <section id="validate" class="page-content">
-            <h2>Data Validation</h2>
+        <h2>Data Validation</h2>
         <article>
-          <p>Verify that clinical entries meet standard formatting requirements.</p>
-          <form>
-            <input type="text" placeholder="Enter Record ID..." aria-label="Record ID">
-            <input type="submit" value="Run Validation">
-          </form>
-        </article>
+      <header><strong>Patient Information</strong></header>
+      <div class="grid">
+        <label>Name<input type="text" id="validate-patient-name" placeholder="Full Name"></label>
+        <label>DOB<input type="text" id="validate-patient-dob" placeholder="YYYY-MM-DD"></label>
+        <label>Gender
+          <select id="validate-patient-gender">
+            <option>Select...</option>
+            <option>Male</option>
+            <option>Female</option>
+            <option>Other</option>
+          </select>
+        </label>
+      </div>
+    </article>
+
+    <div class="grid">
+      <article>
+        <header><strong>Conditions</strong></header>
+        <div class="tag-container" id="validate-condition-tags">
+          <input type="text" id="validate-condition-input" placeholder="Add...">
+        </div>
+      </article>
+      <article>
+        <header><strong>Allergies</strong></header>
+        <div class="tag-container" id="validate-allergy-tags">
+          <input type="text" id="validate-allergy-input" placeholder="Add...">
+        </div>
+      </article>
+    </div>
+
+    <div class="grid">
+      <article>
+        <header><strong>Medications</strong></header>
+        <div class="tag-container" id="validate-med-tags">
+          <input type="text" id="validate-med-input" placeholder="Add...">
+        </div>
+      </article>
+      <article>
+        <header><strong>Last Updated</strong></header>
+        <input type="text" id="validate-last-updated" placeholder="YYYY-MM-DD">
+      </article>
+    </div>
+
+    <button onclick="submitValidation()">Complete Reconciliation</button>
       </section>
     </main>
 
@@ -293,29 +221,115 @@
       }
     }
 
-  </script>
+    function addReconcileRow() {
+      const tbody = document.getElementById('reconcile-med-body');
+      const newRow = document.createElement('tr');
+
+      newRow.innerHTML = `
+        <td><input type="text" placeholder="Source System" id="system-source"></td>
+        <td><input type="text" placeholder="Medication & Dosage" id="medication-info"></td>
+        <td><input type="text" placeholder="YYYY-MM-DD" id="update-date"></td>
+        <td><select>
+          <option>Select...</option>
+          <option>Low</option>
+          <option>Medium</option>
+          <option>High</option>
+        </select></td>
+        <td><button type="button" onclick="this.parentElement.parentElement.remove()">Remove</button></td>
+      `;
+    
+      tbody.appendChild(newRow);
+    }
+        
+    function captureReconcileData() {
+
+      const patientData = {
+        patient_context: {
+          age: document.getElementById("reconcile-patient-age").value,
+          conditions: Array.from(document.querySelectorAll("#reconcile-condition-tags .tag")).map(t => t.textContent.replace('x', '').trim()),
+          recent_labs: Array.from(document.querySelectorAll("#reconcile-lab-tags .tag")).map(t => t.textContent.replace('x', '').trim())
+        },
+            sources: []
+      };
+
+      const rows = document.querySelectorAll('#reconcile-med-body tr');
+
+      rows.forEach(row => {
+        const inputs = row.querySelectorAll('input');
+        patientData.sources.push({
+          system: inputs[0].value,
+          medication: inputs[1].value,
+          last_updated: inputs[2].value,
+          source_reliability: inputs[3].value
+        });
+      });
+      return patientData;
+    }
+
+    async function submitReconciliation() {
+      const data = captureReconcileData();
+
+      try {
+        response = await fetch('/api/reconcile/medication', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+
+        if (response.ok) {
+          alert("Data submitted");
+        } else {
+          alert("Server error: " + response.status);
+        }
+      }
+      catch (error) {
+        console.error("Fetch error: ", error);
+      }
+    }
+
+    async function submitValidation() {
+      const getTags = (id) => Array.from(document.querySelectorAll(`#${id} .tag`)).map(t => t.innerText.replace('x', '').trim());
+      
+      const data = {
+        name: document.getElementById("validate-patient-name").value,
+        dob: document.getElementById("validate-patient-dob").value,
+        conditions: getTags("validate-condition-tags"),
+        allergies: getTags("validate-allergy-tags"),
+        medications: getTags("validate-med-tags"),
+        last_updated: document.getElementById("validate-last-updated").value
+      };
+
+      try {
+        response = await fetch('/api/validate/data_quality', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+
+        if (!response.ok) {
+          alert("Server error: " + response.status);
+        }
+      }
+      catch (error) {
+        console.error("Fetch error: ", error);
+      }
+    }
+
+
+    function showPage(pageId) {
+      // Hide all pages
+      document.querySelectorAll('.page-content').forEach(page => {
+        page.classList.remove('active');
+      });
+      // Show the target page
+      document.getElementById(pageId).classList.add('active');
+    }
+
+    </script>
 
 
     <footer class="container">
       <small><a href="#">Documentation</a> • <a href="#">Privacy Policy</a></small>
     </footer>
-
-    <script>
-        function showPage(pageId) {
-          // Hide all pages
-          document.querySelectorAll('.page-content').forEach(page => {
-            page.classList.remove('active');
-          });
-          // Show the target page
-          document.getElementById(pageId).classList.add('active');
-        }
-
-        // Placeholder for your C++ API call
-        async function fetchReconcileData() {
-          const resultsDiv = document.getElementById('reconcile-results');
-
-          // Example: const response = await fetch('/api/reconcile');
-        }
-        </script>
   </body>
 </html>
