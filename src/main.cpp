@@ -74,8 +74,7 @@ int main(void) {
     return -1;
   }
 
-
-  //s_LLM.Init();
+  s_LLM.Init();
 
   Webserver server(8080);
 

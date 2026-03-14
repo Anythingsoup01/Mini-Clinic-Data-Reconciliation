@@ -33,6 +33,10 @@ LlmAPI::~LlmAPI() {
   curl_easy_cleanup(m_CURL);
 }
 
+void LlmAPI::Init(const std::string &apiKey) {
+  m_ApiKey = apiKey;
+}
+
 std::string LlmAPI::ParseJSON(const std::string &request, const std::string &jsonBody) {
   std::string readBuffer;
   std::string reconcilePrompt = R"**(
@@ -103,7 +107,7 @@ std::string LlmAPI::ParseJSON(const std::string &request, const std::string &jso
   )**";
 
   if(m_CURL) {
-    std::string url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=AIzaSyDNEZSlfAlVeV9R5hIwLRtM1blMF97m-hA";
+    std::string url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=" + m_ApiKey;
 
     std::string prompt = request == "RECONCILE" ? reconcilePrompt : validatePrompt;
     prompt += jsonBody;
