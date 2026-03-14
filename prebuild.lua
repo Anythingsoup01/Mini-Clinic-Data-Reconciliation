@@ -14,9 +14,13 @@ Project = {
 
   includedirs = {
     "include",
+    "vendor/yaml-cpp/include"
   },
 
   links = {
-    "curl"
+    "curl",
+    "yaml-cpp",
   }
 }
+
+External = "vendor/yaml-cpp"

@@ -11,9 +11,12 @@ set_property(TARGET mini-clinic PROPERTY CXX_STANDARD 20)
 
 target_include_directories(mini-clinic PRIVATE
     "include"
+    "vendor/yaml-cpp/include"
 )
 
 target_link_libraries(mini-clinic
     curl
+    yaml-cpp
 )
 
+add_subdirectory(vendor/yaml-cpp)
