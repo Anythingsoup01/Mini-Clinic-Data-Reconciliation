@@ -5,6 +5,7 @@ set(SRCS
     "src/llm_api.cpp"
     "src/main.cpp"
     "src/webserver.cpp"
+    "src/routes/routes.cpp"
 )
 add_executable(mini-clinic ${SRCS})
 set_property(TARGET mini-clinic PROPERTY CXX_STANDARD 20)
