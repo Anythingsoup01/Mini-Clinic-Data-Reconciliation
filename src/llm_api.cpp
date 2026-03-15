@@ -64,19 +64,19 @@ LlmResponseData LlmAPI::ParseJSON(const std::string &request, const std::string 
   )**";
 
   std::string validatePrompt = R"**(
-Role: Expert Clinical Data Analyser. 
-Objective: Parse provided clinical data into a structured JSON report.
+    Role: Expert Clinical Data Analyser. 
+    Objective: Parse provided clinical data into a structured JSON report.
 
-Normalization Protocol (MANDATORY):
-- All field names from the input must be converted to lowercase and use underscores (e.g., "Blood Pressure" -> "blood_pressure").
-- If the input contains "Vital Signs", map them to "vital_sign.[field_name]".
+    Normalization Protocol (MANDATORY):
+    - All field names from the input must be converted to lowercase and use underscores (e.g., "Blood Pressure" -> "blood_pressure").
+    - If the input contains "Vital Signs", map them to "vital_sign.[field_name]".
 
-Strict Operational Rules:
-1. STRICT DATA BINDING: You are prohibited from generating, inferring, or adding any fields not in the input, EXCEPT for mandatory structural checks.
-2. ALLERGY VALIDATION: 'allergies' is a required field. If 'allergies' is missing or empty in the input, you MUST include an object in 'issues_detected' with: {"field": "allergies", "issue": "No allergies documented - likely incomplete", "severity": "medium"}.
-3. Output ONLY raw, single-line JSON. No markdown, no backticks.
+    Strict Operational Rules:
+    1. STRICT DATA BINDING: You are prohibited from generating, inferring, or adding any fields not in the input, EXCEPT for mandatory structural checks.
+    2. ALLERGY VALIDATION: 'allergies' is a required field. If 'allergies' is missing or empty in the input, you MUST include an object in 'issues_detected' with: {"field": "allergies", "issue": "No allergies documented - likely incomplete", "severity": "medium"}.
+    3. Output ONLY raw, single-line JSON. No markdown, no backticks.
 
-JSON Schema:
+    JSON Schema:
     {
       "overall_score": 0,
       "breakdown": {
