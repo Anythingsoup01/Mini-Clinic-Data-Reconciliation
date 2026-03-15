@@ -8,6 +8,9 @@ Linux
 
 ## How to Setup
 
+### 0. Get AI API Key
+This project uses Googles Gemini AI as the backend AI. To get an API Key you must go to [AI Studio](https://aistudio.google.com/api-keys) and generate a key after logging in. This key will be used in the config setup down below.
+
 ### 1. Clone the Repository
 
 Pull the repository and all necessary submodules using the following command:
