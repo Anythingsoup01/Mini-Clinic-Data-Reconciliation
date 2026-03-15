@@ -56,11 +56,6 @@ Go to localhost:PORT/api/home and proceed to login with admin/admin
 ---
 
 ## Design Decisions
-
-### Language
-
-This project is implemented in **C++20**. C++ was chosen for its high-performance memory management and ability to handle concurrent data processing requirements, which are critical for clinical data reconciliation.
-
 ### Libraries
 
 * **[nlohmann/json]:** Used for robust JSON parsing, ensuring all incoming data from the web interface is validated against the schema.
@@ -71,8 +66,7 @@ This project is implemented in **C++20**. C++ was chosen for its high-performanc
 * **[Linux/WSL]:** I chose this platform due to how easy it is to setup and run on both Windows and Linux.
 
 ### Language
-* **[C++]:** I chose this language because it compiles directly into machine code, allowing for shorter wait times and predictable memory allocations.
-
+* **[C++]:** I chose this language because it compiles directly into machine code, allowing for shorter wait times and predictable memory allocations. C++ was also chosen for its high-performance memory management and ability to handle concurrent data processing requirements, which are critical for clinical data reconciliation.
 
 ---
 
