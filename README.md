@@ -46,6 +46,15 @@ cmake ..
 cmake --build . -j N
 
 ```
+### 4. Run
+
+Go to localhost:PORT/api/home and proceed to login with admin/admin
+
+```bash
+./build/mini-clinic
+```
+```
+```
 
 ---
 
