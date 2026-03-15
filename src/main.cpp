@@ -31,22 +31,43 @@ std::string ReadFile(const std::filesystem::path &filePath) {
 static LlmAPI s_LLM;
 
 std::string HandleRoot(const std::string &jsonData) {
-  return ReadFile("resources/html/index.html");
+  return "HTTP/1.1 200 OK\r\n\r\n" + ReadFile("resources/html/index.html");
+}
+
+std::string HandleLogin(const std::string &jsonData) {
+  return "HTTP/1.1 200 OK\r\n\r\n" + ReadFile("resources/html/login.html");
 }
 
 std::string HandleDebugPage(const std::string &jsonData) {
-  return ReadFile("resources/html/debug.html");
+  return "HTTP/1.1 200 OK\r\n\r\n" + ReadFile("resources/html/debug.html");
 }
-// TODO: Return a status from ParseJSON
 
 std::string HandleReconcileMedication(const std::string &jsonData) {
-  s_LLM.ParseJSON("RECONCILE", jsonData);
-  return "HTTP/1.1 200 OK\r\n";
+  LlmResponseData data = s_LLM.ParseJSON("RECONCILE", jsonData);
+  switch (data.ResponseCode) {
+    case LlmResponseCode::OK: {
+      return "HTTP/1.1 200 OK\r\n\r\n" + data.JsonBody;
+    }
+    case LlmResponseCode::INVALID_PROMPT:
+    case LlmResponseCode::PARSING_ERROR:
+    case LlmResponseCode::OUT_OF_BOUNDS:
+      return "HTTP/1.1 500 Internal Server Error\r\n\r\n" + data.JsonBody;
+  }
+  return "HTTP/1.1 500 Internal Server Error\r\n\r\n{ \"code\": \"OUT_OF_BOUNDS\", \"message\": \"Function 'ParseJSON' went out of bounds\" }";
 }
 
 std::string HandleValidateDataQuality(const std::string &jsonData) {
-  s_LLM.ParseJSON("VALIDATE", jsonData);
-  return "HTTP/1.1 400 Page Not Found\r\n";
+  LlmResponseData data = s_LLM.ParseJSON("VALIDATE", jsonData);
+  switch (data.ResponseCode) {
+    case LlmResponseCode::OK: {
+      return "HTTP/1.1 200 OK\r\n\r\n" + data.JsonBody;
+    }
+    case LlmResponseCode::INVALID_PROMPT:
+    case LlmResponseCode::PARSING_ERROR:
+    case LlmResponseCode::OUT_OF_BOUNDS:
+      return "HTTP/1.1 500 Internal Server Error\r\n\r\n" + data.JsonBody;
+  }
+  return "HTTP/1.1 500 Internal Server Error\r\n\r\n{ \"code\": \"OUT_OF_BOUNDS\", \"message\": \"Function 'ParseJSON' went out of bounds\" }";
 }
 
 _Config load_config() {
@@ -79,6 +100,9 @@ int main(void) {
   Webserver server(config.Port);
 
   server.HandleRoute(_Method::GET, "/api/home", HandleRoot);
+  server.HandleRoute(_Method::GET, "/api/login", HandleLogin);
+
+  server.HandleRoute(_Method::POST, "/api/auth/login", HandleLoginLogic);
   server.HandleRoute(_Method::POST, "/api/reconcile/medication", HandleReconcileMedication);
   server.HandleRoute(_Method::POST, "/api/validate/data_quality", HandleValidateDataQuality);
 

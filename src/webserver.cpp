@@ -42,9 +42,6 @@ std::string ReadFullRequest(int fd) {
   return full_request;
 }
 
-
-
-
 Webserver::Webserver(uint16_t port) {
   m_FD = socket(AF_INET, SOCK_STREAM, 0);
   sockaddr_in address;
@@ -114,13 +111,13 @@ void Webserver::Run() {
     switch (data.Method) {
       case _Method::GET: {
         if (m_GETHandles.contains(data.Route)) {
-          response += m_GETHandles[data.Route](data.JsonData);
+          response = m_GETHandles[data.Route](data.JsonData);
         }
         break;
       }
       case _Method::POST: {
         if (m_POSTHandles.contains(data.Route)) {
-          response += m_POSTHandles[data.Route](data.JsonData);
+          response = m_POSTHandles[data.Route](data.JsonData);
         }
         break;
       }
