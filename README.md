@@ -70,7 +70,6 @@ This project is implemented in **C++20**. C++ was chosen for its high-performanc
 
 ---
 
-<a name="wsl2-setup-instructions></a>
 # WSL2 Setup Instructions
 
 Follow these steps to install and configure Windows Subsystem for Linux (WSL2) for development.
