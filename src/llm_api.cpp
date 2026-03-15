@@ -39,80 +39,84 @@ void LlmAPI::Init(const std::string &apiKey) {
   m_ApiKey = apiKey;
 }
 
-std::string LlmAPI::ParseJSON(const std::string &request, const std::string &jsonBody) {
+LlmResponseData LlmAPI::ParseJSON(const std::string &request, const std::string &jsonBody) {
   std::string readBuffer;
   std::string reconcilePrompt = R"**(
-    System Instruction: Clinical Data Reconciler
-    Role: You are an expert Clinical Data Reconciler. Your objective is to parse unstructured clinical data and raw screenshots to generate a structured, verified medication reconciliation report in JSON format.
-    CRITICAL INSTRUCTION: You are a data extraction engine. Do not output any conversational text, explanations, or pleasantries. You must respond only with raw JSON that adheres exactly to the schema below. If you cannot parse the data, return an error object inside the JSON. Do not use Markdown code blocks if possible; just provide the raw JSON.
-    Task:
-    Analyze the provided Patient Context and Sources.
-    Perform a reconciliation to identify the most accurate, current medication list.
-    Assess the reliability of the sources to determine a Confidence Score.
-    Output your analysis strictly according to the defined JSON schema.
-    You will recieve data formatted as such:
-    Patient Context:
-      Age: Integer,
-      Conditions: List[String],
-      Recent Labs: Dict[String -> Integer],
-      Sources: List[
-       System: Location,
-       Medication: Medicine Dosage Frequency,
-       Last Updated: Date of last changed,
-       Reliability: (low, medium, high)
-     ]
-    Output Contraints:
-    CRITICAL INSTRUCTION: Do not repeat any data that is provided to you. You must start your response with '{', Do Not Use Markdown Notation.
-    You must return only a valid JSON object."
-    The output must formatted as followed:
-    Reconciled Medication: Medicine Dosage Frequency of the Most likely perscription,
-    Confidence Score: 0-100 of the Most likely perscription,
-    Reasoning: String,
-    Recommended Actions: List[String] (What should be done internally to make sure everyone is on the same page),
-    Clinical Safety Check: Whether They Passed or Not (Based on confidence)
-    Input Data:
+    Constraint Strategy:
+    1. Output ONLY a valid JSON object. 
+    2. NO markdown, NO newlines, NO conversational text.
+    3. If input data contains quotes or special characters, they must be escaped according to RFC 8259, or replaced with a space if that preserves clarity.
+    4. If an error occurs, return {"error": "description_of_parsing_failure"}.
 
+    JSON Schema:
+    {
+    "reconciled_medication": "string",
+    "confidence_score": (0-100),
+    "reasoning": "string (Max 2 sentences. Focus on source reliability/recency. Strip all nested quotes from source data to prevent syntax breaks.)",
+    "recommended_actions": ["string"],
+    "clinical_safety_check": "PASSED|NEEDS ATTENTION|FAILED"
+    }
+
+    Processing Logic:
+    1. Normalize Input: Strip all newlines and unescaped quotes from patient data before analysis.
+    2. Reconcile: Compare sources by recency and reliability.
+    3. Validate: Ensure the JSON object has NO internal line breaks.
+    4. Final Output: Strictly JSON string.
+
+    Patient Input Data:
   )**";
 
   std::string validatePrompt = R"**(
-    System Instruction: Clinical Data Analyser
-    Role: You are an expert Clinical Data Analyser. Your objective is to parse unstructured clinical data and raw screenshots to generate a structured, verified medication data report in JSON format.
-    CRITICAL INSTRUCTION: You are a data extraction engine. Do not output any conversational text, explanations, or pleasantries. You must respond only with raw JSON that adheres exactly to the schema below. If you cannot parse the data, return an error object inside the JSON. Do not use Markdown code blocks if possible; just provide the raw JSON.
-    Task:
-    Analyze the provided paitient information.
-    Output your analysis strictly according to the defined JSON schema.
-    You will recieve data formatted as such:
-    Demographics: Dic[String -> String] (This will contain a name, date of birth, and gender),
-    Medications: List[String] (This will contain a list of medications and the dosages),
-    Alergies: List[String],
-    Conditions: List[String],
-    Vital Signs: Dict[String -> Any] (This will contain metrics like blood pressure and heart rate),
-    Last Updated: String (Format YYYY-MM-DD),
-    Output Contraints:
-    CRITICAL INSTRUCTION: Do not repeat any data that is provided to you. You must start your response with '{', Do Not Use Markdown Notation.
-    You must return only a valid JSON object."
-    The output must formatted as followed:
-    Overall Score: Integer (0-100) (This is the overall rating of the provided data)
-    Breakdown: {
-      Completeness: Integer (0-100) (How complete the information is)
-      Accuracy: Integer (0-100) (How accurate the information is)
-      Timeliness: Integer (0-100) (Goes off of the Last Update field)
-      Clinical Plausibility: Integer (0-100) (How plausible this information is)
-    }
-    Issues Detected: List[Dict[String -> String]] {
-      CRITICAL INSTRUCTION: Demographics don't count as fields. All fields need to be lowercased and use '_' for any spaces only for the field. After all fields are noted. The following fields pertain to the aformentioned information, only list important fields. This includes but isn't limited to impossible vitals signs and drug-disease mismatches. If the data pertains to Vitals, the field name needs to be as followed "vital_sign.'field'", this only applies to vitals. Add last_updated to the very end, and display how many months are have gone by from the provided date, this should look as followed "Data is #+ months old", if the data is half a year or higher that is a medium Severity a year or more is high.
-      Field: String,
-      Issue: String (What about the field is the issue, if there is no documented items you must state "No 'field'(s) documented - likely incomplete")
-      Severity: String (How severe the issue is from low - high)
-    }
-    Input Data:
+Role: Expert Clinical Data Analyser. 
+Objective: Parse provided clinical data into a structured JSON report.
 
+Normalization Protocol (MANDATORY):
+- All field names from the input must be converted to lowercase and use underscores (e.g., "Blood Pressure" -> "blood_pressure").
+- If the input contains "Vital Signs", map them to "vital_sign.[field_name]".
+
+Strict Operational Rules:
+1. STRICT DATA BINDING: You are prohibited from generating, inferring, or adding any fields not in the input, EXCEPT for mandatory structural checks.
+2. ALLERGY VALIDATION: 'allergies' is a required field. If 'allergies' is missing or empty in the input, you MUST include an object in 'issues_detected' with: {"field": "allergies", "issue": "No allergies documented - likely incomplete", "severity": "medium"}.
+3. Output ONLY raw, single-line JSON. No markdown, no backticks.
+
+JSON Schema:
+    {
+      "overall_score": 0,
+      "breakdown": {
+        "completeness": 0,
+        "accuracy": 0,
+        "timeliness": 0,
+        "clinical_plausibility": 0
+      },
+      "issues_detected": [
+        {
+          "field": "string",
+          "issue": "string",
+          "severity": "low|medium|high"
+        }
+      ]
+    }
+
+    Logic Instructions:
+    - For 'last_updated': Calculate months elapsed from March 2026. If >= 6 months, severity is 'medium'. If >= 12 months, 'high'.
+    - Use format "vital_sign.[normalized_field_name]" only if the vital sign is present.
+    - If no other clinical issues are found, return an empty list or only the allergy issue if applicable.
+
+    Input Data:
   )**";
 
   if(m_CURL) {
     std::string url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=" + m_ApiKey;
 
-    std::string prompt = request == "RECONCILE" ? reconcilePrompt : validatePrompt;
+    std::string prompt = request == "RECONCILE" ? reconcilePrompt : request == "VALIDATE" ? validatePrompt : "{ \"error\": \"invalid backend prompt type\" }";
+
+    if (prompt == "{ \"error\": \"invalid backend prompt type\" }") {
+      return {
+        LlmResponseCode::INVALID_PROMPT,
+        prompt
+      };
+    }
+
     prompt += jsonBody;
 
     std::time_t now = std::time(nullptr); // time(NULL) also works
@@ -138,15 +142,36 @@ std::string LlmAPI::ParseJSON(const std::string &request, const std::string &jso
     curl_easy_perform(m_CURL);
 
     try {
+
       auto j = nlohmann::json::parse(readBuffer);
 
-      std::string text = j["candidates"][0]["content"]["parts"][0]["text"].get<std::string>();
+      // 1. Check if the expected structure exists
+      if (j.contains("candidates") && j["candidates"].is_array() && !j["candidates"].empty()) {
+        auto& first_candidate = j["candidates"][0];
 
-      std::cout << text << "\n";
-      return text;
+        // 2. Safely traverse deeper
+        if (first_candidate.contains("content") && 
+          first_candidate["content"].contains("parts") && 
+          !first_candidate["content"]["parts"].empty()) {
+
+          std::string text = first_candidate["content"]["parts"][0].value("text", "");
+          return { LlmResponseCode::OK, text };
+        }
+      }
+
+      // If we reach here, the JSON was valid, but the structure wasn't what we expected
+      return { LlmResponseCode::PARSING_ERROR, "Unexpected JSON structure" };
     } catch (const nlohmann::json::exception& e) {
-      return "Error parsing API response: " + std::string(e.what());
+      return {
+        LlmResponseCode::PARSING_ERROR,
+        "{ \"code\": \"PARSING_ERROR\", \"message\": \"" + std::string(e.what()) + "\" }"
+      };
     }
   }
-  return "";
+
+  return {
+    LlmResponseCode::OUT_OF_BOUNDS,
+    "{ \"code\": \"OUT_OF_BOUNDS\", \"message\": \"Function 'ParseJSON' went out of bounds\" }"
+  };
+
 }

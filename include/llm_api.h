@@ -3,6 +3,18 @@
 #include <string>
 #include <curl/curl.h>
 
+enum class LlmResponseCode {
+  OK,
+  INVALID_PROMPT,
+  PARSING_ERROR,
+  OUT_OF_BOUNDS
+};
+
+struct LlmResponseData {
+  LlmResponseCode ResponseCode;
+  std::string JsonBody;
+};
+
 class LlmAPI {
 public:
   LlmAPI();
@@ -10,8 +22,10 @@ public:
 
   void Init(const std::string &apiKey);
 
-  std::string ParseJSON(const std::string &request, const std::string &jsonBody);
+  LlmResponseData ParseJSON(const std::string &request, const std::string &jsonBody);
 private:
   CURL *m_CURL;
   std::string m_ApiKey;
+
+  std::string m_ReadBuffer;
 };
