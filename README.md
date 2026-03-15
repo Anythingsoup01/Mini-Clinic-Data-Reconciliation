@@ -4,7 +4,7 @@
 
 [Windows (WSL - Windows Subsystem for Linux)](#wsl2-setup-instructions)
 <br>
-[Linux](#linux-libraries-setup)
+Linux
 
 ## How to Setup
 
