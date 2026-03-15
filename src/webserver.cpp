@@ -114,14 +114,12 @@ void Webserver::Run() {
     switch (data.Method) {
       case _Method::GET: {
         if (m_GETHandles.contains(data.Route)) {
-          response = "HTTP/1.1 200 OK\r\n\r\n";
           response += m_GETHandles[data.Route](data.JsonData);
         }
         break;
       }
       case _Method::POST: {
         if (m_POSTHandles.contains(data.Route)) {
-          response = "HTTP/1.1 200 OK\r\n\r\n";
           response += m_POSTHandles[data.Route](data.JsonData);
         }
         break;

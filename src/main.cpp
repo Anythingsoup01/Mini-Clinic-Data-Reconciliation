@@ -46,7 +46,7 @@ std::string HandleReconcileMedication(const std::string &jsonData) {
 
 std::string HandleValidateDataQuality(const std::string &jsonData) {
   s_LLM.ParseJSON("VALIDATE", jsonData);
-  return "HTTP/1.1 200 OK\r\n";
+  return "HTTP/1.1 400 Page Not Found\r\n";
 }
 
 _Config load_config() {
