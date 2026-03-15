@@ -53,9 +53,6 @@ int main(void) {
   server.HandleRoute(_Method::POST, "/api/reconcile/medication", HandleReconcileMedication);
   server.HandleRoute(_Method::POST, "/api/validate/data_quality", HandleValidateDataQuality);
 
-  server.HandleRoute(_Method::GET, "/api/debug", HandleDebugPage);
-
-
   server.Run();
  
   LlmAPI::Shutdown();
