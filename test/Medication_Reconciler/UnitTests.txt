@@ -1,0 +1,57 @@
+Unit Test #1
+
+Age - 58
+Conditions - Hypertension, Type 2 Diabetes
+Lab Results - A1c 7.2%
+
+Sources - [
+System - EHR System, Medication - Lisinopril 10mg Daily, Updated - 2025-05-10, Reliability - High
+System - Patient Portal, Medication - Lisinopril 20mg Once Daily, Updated - 2026-03-10, Reliability - Medium
+]
+
+Unit Test #2
+
+Age - 58
+Conditions - Atrial Fibrillation
+Lab Results - INR 2.4
+
+Sources - [
+System - Hospital Record, Medication - Warfarin 5mg Every Evening, Updated - 2025-09-15, Reliability - High
+System - External Pharmacy, Medication - Warfarin 2mg Daily, Updated - 2026-03-01, Reliability - Low
+]
+
+Unit Test #3
+
+Age - 45
+Conditions - Asthma
+Lab Results - FEV1 85%
+
+Sources - [
+System - Specialist Office, Medication - Albuterol HFA 90mcg PRN, Updated - 2025-04-01, Reliability - Medium
+System - PCP Office, Medication - Albuterol HFA 90mcg Every 4 hrs, Updated - 2026-02-28, Reliability - High
+]
+
+Unit Test #4
+
+Age - 30
+Conditions - Hypothyroidism
+Lab Results - TSH 2.5
+
+Sources - [
+System - Labcorp, Medication - Levothyroxine 50mcg Once Daily, Updated - 2025-11-20, Reliability - Medium
+System - Primary Care, Medication - Levothyroxine 25mcg Once Daily, Updated - 2026-01-15, Reliability - High
+System - Pharmacy Sync, Medication - Levothyroxine 25mcg Twice Daily, Updated - 2026-03-14, Reliability - Medium
+]
+
+Unit Test #5
+
+Age - 65
+Conditions - Chronic Pain
+Lab Results - N/A
+
+Sources - [
+System - Urgent Care, Medication - Ibuprofen 800mg TID, Updated - 2026-01-10, Reliability - High
+System - Pharmacy A, Medication - Ibuprofen 800mg 3x Daily, Updated - 2026-03-05, Reliability - Medium
+]
+
+Results are as seen in the images located in this directory.
