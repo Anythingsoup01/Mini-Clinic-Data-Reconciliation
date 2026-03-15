@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Diagnostic Engine</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+    <style>
+    body { display: flex; align-items: center; justify-content: center; height: 100vh; }
+        article { width: 100%; max-width: 400px; }
+        </style>
+  </head>
+  <body>
+
+    <article>
+      <header><strong>Diagnostic Engine Login</strong></header>
+      <form id="login-form">
+        <label for="username">Username</label>
+        <input type="text" id="username" name="username" required>
+
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" required>
+
+        <button type="submit" id="submit-btn">Sign In</button>
+      </form>
+    </article>
+
+    <script>
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const user = document.getElementById('username').value;
+      const pass = document.getElementById('password').value;
+
+      // Logic to verify against your C++ backend
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ user, pass })
+      });
+
+      if (response.ok) {
+        sessionStorage.setItem('loginSuccess', 'true');
+        window.location.href = '/api/home';
+      } else {
+        alert("Invalid credentials.");
+      }
+    });
+    </script>
+  </body>
+</html>

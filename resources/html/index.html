@@ -25,7 +25,7 @@
     <header class="container">
       <nav>
         <ul>
-          <li><strong>Clinical Engine v1.0</strong></li>
+          <li><strong>Clinical Engine</strong></li>
         </ul>
         <ul>
           <li><a href="#" onclick="showPage('dashboard')">Dashboard</a></li>
@@ -61,7 +61,7 @@
           <article>
             <header><strong>Conditions</strong></header>
             <div class="tag-container" id="reconcile-condition-tags">
-              <input type="text" id="reconcile-condition-input" placeholder="Add condition...">
+              <input type="text" id="reconcile-condition-input" placeholder="Type 2 Diabetes...">
             </div>
 
           </article>
@@ -69,7 +69,7 @@
           <article>
             <header><strong>Lab Results</strong></header>
             <div class="tag-container" id="reconcile-lab-tags">
-              <input type="text" id="reconcile-lab-input" placeholder="Add test...">
+              <input type="text" id="reconcile-lab-input" placeholder="Lab Test, # Result...">
             </div> 
             </<article>
         </div>
@@ -448,8 +448,18 @@ function displayReconciliationResults(data) {
       document.getElementById(pageId).classList.add('active');
     }
 
-    </script>
+    window.addEventListener('DOMContentLoaded', () => {
+      const isAuthorized = sessionStorage.getItem('loginSuccess');
 
+      if (isAuthorized !== 'true') {
+        // User didn't come from the login page, get them out
+        window.location.href = '/api/login'; 
+      } else {
+        console.log("Access granted.");
+      }
+    });
+
+    </script>
 
     <footer class="container">
       <small><a href="#">Documentation</a> • <a href="#">Privacy Policy</a></small>

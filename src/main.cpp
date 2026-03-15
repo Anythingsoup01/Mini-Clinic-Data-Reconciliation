@@ -8,6 +8,10 @@
 
 #include "llm_api.h"
 
+#include <nlohmann/json.hpp>
+
+using json = nlohmann::json;
+
 struct _Config {
   std::string ApiKey;
   int32_t Port;
@@ -40,6 +44,26 @@ std::string HandleLogin(const std::string &jsonData) {
 
 std::string HandleDebugPage(const std::string &jsonData) {
   return "HTTP/1.1 200 OK\r\n\r\n" + ReadFile("resources/html/debug.html");
+}
+
+static std::unordered_map<std::string, std::string> s_AuthorisedCredentials = {
+  {"admin", "admin"}
+};
+
+
+std::string HandleLoginLogic(const std::string &jsonData) {
+  // For example use, such as this, a full datebase isn't necessary
+  json j = json::parse(jsonData);
+
+  std::string username = j["user"];
+  std::string password = j["pass"];
+
+  if (s_AuthorisedCredentials.contains(username)) {
+    if (s_AuthorisedCredentials[username] == password) {
+      return "HTTP/1.1 200 OK\r\n\r\n";
+    }
+  }
+  return "HTTP/1.1 401 OK";
 }
 
 std::string HandleReconcileMedication(const std::string &jsonData) {
