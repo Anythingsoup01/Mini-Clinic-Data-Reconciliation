@@ -92,10 +92,10 @@
                 <td><input type="text" placeholder="Medication & Dosage" id="medication-info"></td>
                 <td><input type="text" placeholder="YYYY-MM-DD" id="update-date"></td>
                 <td><select>
-                  <option>Select...</option>
-                  <option>Low</option>
-                  <option>Medium</option>
-                  <option>High</option>
+                  <option value="">Select...</option>
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
                 </select></td>
                 <td></td>
               </tr>
@@ -106,6 +106,24 @@
             <button onclick="submitReconciliation()">Submit Selection</button>
           </div>
         </article>
+<section id="reconcile-output" style="display: none;">
+    <header><strong>Reconciliation Results</strong></header>
+    <article>
+        <table class="striped">
+            <thead>
+                <tr>
+                    <th>Medication</th>
+                    <th>Confidence</th>
+                    <th>Reasoning</th>
+                    <th>Recommended Actions</th>
+                    <th>Safety Check</th>
+                </tr>
+            </thead>
+            <tbody id="reconcile-body">
+                </tbody>
+        </table>
+    </article>
+</section>
       </section>
 
       <section id="validate" class="page-content">
@@ -117,10 +135,10 @@
             <label>DOB<input type="text" id="validate-patient-dob" placeholder="YYYY-MM-DD"></label>
             <label>Gender
               <select id="validate-patient-gender">
-                <option>Select...</option>
-                <option>Male</option>
-                <option>Female</option>
-                <option>Other</option>
+                <option value="">Select...</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+                <option value="other">Other</option>
               </select>
             </label>
           </div>
@@ -161,6 +179,41 @@
         </div>
 
         <button onclick="submitValidation()">Complete Reconciliation</button>
+        <section id="validation-output">
+          <hr>
+          <div class="grid">
+            <article style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
+              <header style="width: 100%;"><strong>Overall Score</strong></header>
+              <h1 id="res-overall-score" style="font-size: 5rem; margin-bottom: 0; color: var(--pico-primary);">0</h1>
+              <p>Calculated Integrity</p>
+            </article>
+
+            <article>
+              <header><strong>Breakdown</strong></header>
+              <div style="display: flex; flex-direction: column; gap: 10px;">
+                <label>Completeness <progress id="prog-completeness" value="0" max="100"></progress></label>
+                <label>Accuracy <progress id="prog-accuracy" value="0" max="100"></progress></label>
+                <label>Timeliness <progress id="prog-timeliness" value="0" max="100"></progress></label>
+                <label>Plausibility <progress id="prog-plausibility" value="0" max="100"></progress></label>
+              </div>
+            </article>
+          </div>
+
+          <article>
+            <header><strong>Detected Issues</strong></header>
+            <table class="striped">
+              <thead>
+                <tr>
+                  <th>Field</th>
+                  <th>Issue</th>
+                  <th>Severity</th>
+                </tr>
+              </thead>
+              <tbody id="issues-body">
+              </tbody>
+            </table>
+          </article>
+        </section>
       </section>
     </main>
 
@@ -200,33 +253,6 @@
     setupTags("validate-med-input", "validate-med-tags");
     setupTags("validate-vitals-input", "validate-vitals-tags");
 
-    async function submitValidation() {
-      const getTags = (id) => Array.from(document.querySelectorAll(`#${id} .tag`)).map(t => t.innerText.replace('x', '').trim());
-      
-      const data = {
-        name: document.getElementById("validate-name").value,
-        dob: document.getElementById("validate-dob").value,
-        conditions: getTags("validate-condition-tags"),
-        allergies: getTags("validate-allergy-tags"),
-        medications: getTags("validate-med-tags"),
-        last_updated: document.getElementById("validate-last-updated").value
-      };
-
-      try {
-        response = await fetch('/api/validate/data_quality', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data)
-        });
-
-        if (!response.ok) {
-          alert("Server error: " + response.status);
-        }
-      }
-      catch (error) {
-        console.error("Fetch error: ", error);
-      }
-    }
 
     function addReconcileRow() {
       const tbody = document.getElementById('reconcile-med-body');
@@ -237,17 +263,17 @@
         <td><input type="text" placeholder="Medication & Dosage" id="medication-info"></td>
         <td><input type="text" placeholder="YYYY-MM-DD" id="update-date"></td>
         <td><select>
-          <option>Select...</option>
-          <option>Low</option>
-          <option>Medium</option>
-          <option>High</option>
+          <option value="">Select...</option>
+          <option value="low">Low</option>
+          <option value="medium">Medium</option>
+          <option value="high">High</option>
         </select></td>
         <td><button type="button" onclick="this.parentElement.parentElement.remove()">Remove</button></td>
       `;
     
       tbody.appendChild(newRow);
     }
-        
+
     function captureReconcileData() {
 
       const patientData = {
@@ -267,11 +293,46 @@
           system: inputs[0].value,
           medication: inputs[1].value,
           last_updated: inputs[2].value,
-          source_reliability: inputs[3].value
+          source_reliability: row.source_reliability
         });
       });
       return patientData;
     }
+
+function displayReconciliationResults(data) {
+    const tbody = document.getElementById('reconcile-body');
+    const outputSection = document.getElementById('reconcile-output');
+    
+    // Clear and show
+    tbody.innerHTML = '';
+    outputSection.style.display = 'block';
+
+    // Ensure we handle either a single object or an array
+    const meds = Array.isArray(data) ? data : [data];
+
+    meds.forEach(item => {
+        const row = tbody.insertRow();
+        const safetyStyle = item.clinical_safety_check === "Pass" 
+            ? "color: #2e7d32; font-weight: bold;" 
+            : "color: #c62828; font-weight: bold;";
+
+        // Handle the actions list safely
+        const actionsHtml = Array.isArray(item.recommended_actions) 
+            ? `<ul style="margin: 0; padding-left: 1rem;">${item.recommended_actions.map(a => `<li>${a}</li>`).join('')}</ul>`
+            : item.recommended_actions;
+
+        row.innerHTML = `
+            <td><strong>${item.reconciled_medication}</strong></td>
+            <td>
+                <progress value="${item.confidence_score}" max="100" style="margin:0;"></progress>
+                <small>${item.confidence_score}%</small>
+            </td>
+            <td>${item.reasoning}</td>
+            <td>${actionsHtml}</td>
+            <td style="${safetyStyle}">${item.clinical_safety_check}</td>
+        `;
+    });
+}
 
     async function submitReconciliation() {
       const data = captureReconcileData();
@@ -283,15 +344,63 @@
           body: JSON.stringify(data)
         });
 
-        if (response.ok) {
-          alert("Data submitted");
-        } else {
-          alert("Server error: " + response.status);
+        if (!response.ok) {
+          const errorData = await response.json();
+          console.error("Server Error:", errorData);
+          submitReconciliation();
         }
+
+        const jsonData = await response.json();
+        displayReconciliationResults(jsonData);
       }
       catch (error) {
         console.error("Fetch error: ", error);
       }
+    }
+
+    function displayValidationResults(data) {
+      // Show the results section
+      const outputSection = document.getElementById('validation-output');
+      outputSection.style.display = 'block';
+
+      // Update Overall Score
+      document.getElementById('res-overall-score').innerText = data.overall_score;
+
+      // Update Progress Bars & Numerical Labels
+      const setProgress = (id, val) => {
+        const el = document.getElementById(id);
+        el.value = val;
+      };
+
+      setProgress('prog-completeness', data.breakdown.completeness);
+      setProgress('prog-accuracy', data.breakdown.accuracy);
+      setProgress('prog-timeliness', data.breakdown.timeliness);
+      setProgress('prog-plausibility', data.breakdown.clinical_plausibility);
+
+      // Render Issues Table
+      const tbody = document.getElementById('issues-body');
+      tbody.innerHTML = '';
+
+      const severityMap = {
+        low: { color: "#2e7d32", label: "Low" },     // Green
+        medium: { color: "#ef6c00", label: "Medium" }, // Orange
+        high: { color: "#c62828", label: "High" }    // Red
+      };
+
+      data.issues_detected.forEach(item => {
+        const row = tbody.insertRow();
+        const style = severityMap[item.severity] || severityMap.low;
+
+        row.innerHTML = `
+          <td><code>${item.field}</code></td>
+          <td>${item.issue}</td>
+          <td>
+            <span style="background-color: ${style.color}; color: white; padding: 2px 10px; border-radius: 10px; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">
+              ${style.label}
+            </span>
+          </td>
+        `;
+      });
     }
 
     async function submitValidation() {
@@ -300,6 +409,7 @@
       const data = {
         name: document.getElementById("validate-patient-name").value,
         dob: document.getElementById("validate-patient-dob").value,
+        gender: document.getElementById("validate-patient-gender").value,
         conditions: getTags("validate-condition-tags"),
         allergies: getTags("validate-allergy-tags"),
         medications: getTags("validate-med-tags"),
@@ -315,8 +425,13 @@
         });
 
         if (!response.ok) {
-          alert("Server error: " + response.status);
+          const errorData = await response.json();
+          console.error("Server Error:", errorData);
+          submitValidation();
         }
+
+        const jsonData = await response.json();
+        displayValidationResults(jsonData);
       }
       catch (error) {
         console.error("Fetch error: ", error);
