@@ -80,6 +80,7 @@ Follow these steps to install and configure Windows Subsystem for Linux (WSL2) f
 Open **PowerShell** as an Administrator and run the following command to install the WSL kernel and the default Ubuntu distribution:
 
 ```bash
+# This example is using a debian distro, such as Ubuntu
 wsl --install
 
 ```
