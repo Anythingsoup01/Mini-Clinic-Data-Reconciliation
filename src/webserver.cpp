@@ -10,27 +10,22 @@ std::string ReadFullRequest(int fd) {
   char buffer[4096];
   ssize_t bytes_received;
 
-  // 1. Read the initial chunk (headers)
   bytes_received = read(fd, buffer, sizeof(buffer));
   if (bytes_received <= 0) return "";
 
   full_request.append(buffer, bytes_received);
 
-  // 2. Find the header/body separator (\r\n\r\n)
   size_t header_end = full_request.find("\r\n\r\n");
 
-  // 3. Extract Content-Length to know how much body is left
   size_t content_length = 0;
   size_t cl_pos = full_request.find("Content-Length: ");
   if (cl_pos != std::string::npos) {
     content_length = std::stoi(full_request.substr(cl_pos + 16));
   }
 
-  // 4. Calculate how many body bytes we already have
   size_t body_already_read = (header_end != std::string::npos) 
     ? (full_request.length() - (header_end + 4)) : 0;
 
-  // 5. Loop until we have read the full body
   while (body_already_read < content_length) {
     bytes_received = read(fd, buffer, sizeof(buffer));
     if (bytes_received <= 0) break;
