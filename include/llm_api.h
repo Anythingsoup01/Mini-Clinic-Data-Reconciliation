@@ -17,15 +17,11 @@ struct LlmResponseData {
 
 class LlmAPI {
 public:
-  LlmAPI();
-  ~LlmAPI();
+  static void Init(const std::string &apiKey);
+  static void Shutdown();
 
-  void Init(const std::string &apiKey);
-
-  LlmResponseData ParseJSON(const std::string &request, const std::string &jsonBody);
+  static LlmResponseData ParseJSON(const std::string &request, const std::string &jsonBody);
 private:
-  CURL *m_CURL;
-  std::string m_ApiKey;
-
-  std::string m_ReadBuffer;
+  static inline CURL *m_CURL = nullptr;
+  static inline std::string m_ApiKey = "";
 };

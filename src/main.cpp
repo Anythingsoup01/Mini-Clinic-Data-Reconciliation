@@ -1,14 +1,12 @@
 #include "webserver.h"
 
-#include <iostream>
-#include <filesystem>
-#include <fstream>
 
 #include <yaml-cpp/yaml.h>
+#include <nlohmann/json.hpp>
 
 #include "llm_api.h"
 
-#include <nlohmann/json.hpp>
+#include "routes/routes.h"
 
 using json = nlohmann::json;
 
@@ -17,82 +15,7 @@ struct _Config {
   int32_t Port;
 };
 
-std::string ReadFile(const std::filesystem::path &filePath) {
-  std::ifstream in(filePath, std::ios::binary);
-  if (in)
-  {
-    std::string contents;
-    in.seekg(0, std::ios::end);
-    contents.resize(in.tellg());
-    in.seekg(0, std::ios::beg);
-    in.read(&contents[0], contents.size());
-    in.close();
-    return contents;
-  }
-  return "";
-}
 
-static LlmAPI s_LLM;
-
-std::string HandleRoot(const std::string &jsonData) {
-  return "HTTP/1.1 200 OK\r\n\r\n" + ReadFile("resources/html/index.html");
-}
-
-std::string HandleLogin(const std::string &jsonData) {
-  return "HTTP/1.1 200 OK\r\n\r\n" + ReadFile("resources/html/login.html");
-}
-
-std::string HandleDebugPage(const std::string &jsonData) {
-  return "HTTP/1.1 200 OK\r\n\r\n" + ReadFile("resources/html/debug.html");
-}
-
-static std::unordered_map<std::string, std::string> s_AuthorisedCredentials = {
-  {"admin", "admin"}
-};
-
-
-std::string HandleLoginLogic(const std::string &jsonData) {
-  // For example use, such as this, a full datebase isn't necessary
-  json j = json::parse(jsonData);
-
-  std::string username = j["user"];
-  std::string password = j["pass"];
-
-  if (s_AuthorisedCredentials.contains(username)) {
-    if (s_AuthorisedCredentials[username] == password) {
-      return "HTTP/1.1 200 OK\r\n\r\n";
-    }
-  }
-  return "HTTP/1.1 401 OK";
-}
-
-std::string HandleReconcileMedication(const std::string &jsonData) {
-  LlmResponseData data = s_LLM.ParseJSON("RECONCILE", jsonData);
-  switch (data.ResponseCode) {
-    case LlmResponseCode::OK: {
-      return "HTTP/1.1 200 OK\r\n\r\n" + data.JsonBody;
-    }
-    case LlmResponseCode::INVALID_PROMPT:
-    case LlmResponseCode::PARSING_ERROR:
-    case LlmResponseCode::OUT_OF_BOUNDS:
-      return "HTTP/1.1 500 Internal Server Error\r\n\r\n" + data.JsonBody;
-  }
-  return "HTTP/1.1 500 Internal Server Error\r\n\r\n{ \"code\": \"OUT_OF_BOUNDS\", \"message\": \"Function 'ParseJSON' went out of bounds\" }";
-}
-
-std::string HandleValidateDataQuality(const std::string &jsonData) {
-  LlmResponseData data = s_LLM.ParseJSON("VALIDATE", jsonData);
-  switch (data.ResponseCode) {
-    case LlmResponseCode::OK: {
-      return "HTTP/1.1 200 OK\r\n\r\n" + data.JsonBody;
-    }
-    case LlmResponseCode::INVALID_PROMPT:
-    case LlmResponseCode::PARSING_ERROR:
-    case LlmResponseCode::OUT_OF_BOUNDS:
-      return "HTTP/1.1 500 Internal Server Error\r\n\r\n" + data.JsonBody;
-  }
-  return "HTTP/1.1 500 Internal Server Error\r\n\r\n{ \"code\": \"OUT_OF_BOUNDS\", \"message\": \"Function 'ParseJSON' went out of bounds\" }";
-}
 
 _Config load_config() {
 
@@ -119,7 +42,7 @@ int main(void) {
     return -1;
   }
 
-  s_LLM.Init(config.ApiKey);
+  LlmAPI::Init(config.ApiKey);
 
   Webserver server(config.Port);
 
@@ -135,6 +58,7 @@ int main(void) {
 
   server.Run();
  
+  LlmAPI::Shutdown();
   return 0;
 
 }

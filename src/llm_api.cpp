@@ -27,16 +27,13 @@ std::string json_escape(const std::string &s) {
     return o.str();
 }
 
-LlmAPI::LlmAPI() {
-  m_CURL = curl_easy_init();
-}
-
-LlmAPI::~LlmAPI() {
-  curl_easy_cleanup(m_CURL);
-}
-
 void LlmAPI::Init(const std::string &apiKey) {
+  m_CURL = curl_easy_init();
   m_ApiKey = apiKey;
+}
+
+void LlmAPI::Shutdown() {
+  curl_easy_cleanup(m_CURL);
 }
 
 LlmResponseData LlmAPI::ParseJSON(const std::string &request, const std::string &jsonBody) {
