@@ -33,8 +33,19 @@ API_KEY: XXXXXXXXXXXXXXXXXXXXXXX
 WEBSERVER_PORT: XXXX
 
 ```
+### 3. Install necessary libraries
+```bash
+# Update repositories
+sudo apt update
 
-### 3. Build with CMake
+# Install nlohmann/json (header-only library)
+sudo apt install nlohmann-json3-dev -y
+
+# Install libcurl (for network requests)
+sudo apt install libcurl4-openssl-dev -y
+```
+
+### 4. Build with CMake
 
 This project uses CMake for cross-platform builds. Run the following commands to compile:
 
@@ -46,7 +57,7 @@ cmake ..
 cmake --build . -j N
 
 ```
-### 4. Run
+### 5. Run
 
 ```bash
 ./build/mini-clinic
