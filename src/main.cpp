@@ -18,8 +18,16 @@ int main(void) {
 
   Webserver server(config.Port);
 
+  //
+  //  GET
+  //
+
   server.HandleRoute(_Method::GET, "/api/home", HandleRoot);
   server.HandleRoute(_Method::GET, "/api/login", HandleLogin);
+  
+  //
+  //  POST
+  //
 
   server.HandleRoute(_Method::POST, "/api/auth/login", HandleLoginLogic);
   server.HandleRoute(_Method::POST, "/api/reconcile/medication", HandleReconcileMedication);
