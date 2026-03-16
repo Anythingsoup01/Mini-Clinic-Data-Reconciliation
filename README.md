@@ -28,7 +28,7 @@ Copy the template configuration file and update it with your environment-specifi
 
 ```bash
 
-# Edit config.yaml with your preferred text editor
+# Edit .config with your preferred text editor
 API_KEY: XXXXXXXXXXXXXXXXXXXXXXX
 WEBSERVER_PORT: XXXX
 
@@ -60,7 +60,6 @@ Go to localhost:PORT/api/home and proceed to login with admin/admin
 
 * **[nlohmann/json]:** Used for robust JSON parsing, ensuring all incoming data from the web interface is validated against the schema.
 * **[libcurl]** Chosen as a means of communicating with the Gemini API to send and receive data.
-* **[yaml-cpp]:** Used for reading the config file and is extremely easy and versatile.
 
 ### Platform
 * **[Linux/WSL]:** I chose this platform due to how easy it is to setup and run on both Windows and Linux.
