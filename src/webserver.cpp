@@ -67,6 +67,8 @@ void Webserver::HandleRoute(const _Method &method, const std::string &route, con
       m_POSTHandles[route] = func;
       break;
     }
+    default:
+      break;
   }
 }
 
@@ -79,7 +81,7 @@ ResponseData Webserver::GetData(int fd) {
   size_t spacePos = request.find_first_of(" ");
 
   std::string methodStr = request.substr(0, spacePos);
-  data.Method = methodStr == "GET" ? _Method::GET : _Method::POST;
+  data.Method = methodStr == "GET" ? _Method::GET : methodStr == "POST" ? _Method::POST : _Method::UNSUPPORTED;
 
   data.Route = request.substr(spacePos + 1, request.find_first_of(" ", spacePos + 1) - spacePos - 1);
 
@@ -115,6 +117,9 @@ void Webserver::Run() {
           response = m_POSTHandles[data.Route](data.JsonData);
         }
         break;
+      }
+      default: {
+        response = "HTTP/1.1 405 Method Not Allowed\r\n\r\n";
       }
     }
 

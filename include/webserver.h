@@ -6,6 +6,7 @@
 #include <string>
 
 enum class _Method {
+  UNSUPPORTED,
   GET,
   POST,
 };
