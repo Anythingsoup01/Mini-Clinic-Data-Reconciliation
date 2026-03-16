@@ -75,7 +75,7 @@
         </div>
 
         <article>
-          <header><strong>Systems</strong></header>
+          <header><strong>Sources</strong></header>
           <table id="medication-table">
             <thead>
               <tr>
@@ -106,24 +106,24 @@
             <button onclick="submitReconciliation()">Submit Selection</button>
           </div>
         </article>
-<section id="reconcile-output" style="display: none;">
-    <header><strong>Reconciliation Results</strong></header>
-    <article>
-        <table class="striped">
-            <thead>
+        <section id="reconcile-output" style="display: none;">
+          <header><strong>Reconciliation Results</strong></header>
+          <article>
+            <table class="striped">
+              <thead>
                 <tr>
-                    <th>Medication</th>
-                    <th>Confidence</th>
-                    <th>Reasoning</th>
-                    <th>Recommended Actions</th>
-                    <th>Safety Check</th>
+                  <th>Medication</th>
+                  <th>Confidence</th>
+                  <th>Reasoning</th>
+                  <th>Recommended Actions</th>
+                  <th>Safety Check</th>
                 </tr>
-            </thead>
-            <tbody id="reconcile-body">
-                </tbody>
-        </table>
-    </article>
-</section>
+              </thead>
+              <tbody id="reconcile-body">
+              </tbody>
+            </table>
+          </article>
+        </section>
       </section>
 
       <section id="validate" class="page-content">
@@ -299,40 +299,40 @@
       return patientData;
     }
 
-function displayReconciliationResults(data) {
-    const tbody = document.getElementById('reconcile-body');
-    const outputSection = document.getElementById('reconcile-output');
-    
-    // Clear and show
-    tbody.innerHTML = '';
-    outputSection.style.display = 'block';
+    function displayReconciliationRiesults(data) {
+      const tbody = document.getElementById('reconcile-body');
+      const outputSection = document.getElementById('reconcile-output');
 
-    // Ensure we handle either a single object or an array
-    const meds = Array.isArray(data) ? data : [data];
+      // Clear and show
+      tbody.innerHTML = '';
+      outputSection.style.display = 'block';
 
-    meds.forEach(item => {
+      // Ensure we handle either a single object or an array
+      const meds = Array.isArray(data) ? data : [data];
+
+      meds.forEach(item => {
         const row = tbody.insertRow();
         const safetyStyle = item.clinical_safety_check === "Pass" 
-            ? "color: #2e7d32; font-weight: bold;" 
-            : "color: #c62828; font-weight: bold;";
+          ? "color: #2e7d32; font-weight: bold;" 
+          : "color: #c62828; font-weight: bold;";
 
         // Handle the actions list safely
         const actionsHtml = Array.isArray(item.recommended_actions) 
-            ? `<ul style="margin: 0; padding-left: 1rem;">${item.recommended_actions.map(a => `<li>${a}</li>`).join('')}</ul>`
-            : item.recommended_actions;
+          ? `<ul style="margin: 0; padding-left: 1rem;">${item.recommended_actions.map(a => `<li>${a}</li>`).join('')}</ul>`
+          : item.recommended_actions;
 
         row.innerHTML = `
-            <td><strong>${item.reconciled_medication}</strong></td>
-            <td>
-                <progress value="${item.confidence_score}" max="100" style="margin:0;"></progress>
-                <small>${item.confidence_score}%</small>
-            </td>
-            <td>${item.reasoning}</td>
-            <td>${actionsHtml}</td>
-            <td style="${safetyStyle}">${item.clinical_safety_check}</td>
+          <td><strong>${item.reconciled_medication}</strong></td>
+          <td>
+            <progress value="${item.confidence_score}" max="100" style="margin:0;"></progress>
+            <small>${item.confidence_score}%</small>
+          </td>
+          <td>${item.reasoning}</td>
+          <td>${actionsHtml}</td>
+          <td style="${safetyStyle}">${item.clinical_safety_check}</td>
         `;
-    });
-}
+      });
+    }
 
     async function submitReconciliation() {
       const data = captureReconcileData();
@@ -462,7 +462,7 @@ function displayReconciliationResults(data) {
     </script>
 
     <footer class="container">
-      <small><a href="#">Documentation</a> • <a href="#">Privacy Policy</a></small>
+      <small><a href="https://github.com/Anythingsoup01/Mini-Clinic-Data-Reconciliation">Documentation</a> <a href="https://github.com/Anythingsoup01/Mini-Clinic-Data-Reconciliation/blob/main/LICENSE">License Agreement</a></small>
     </footer>
   </body>
 </html>
