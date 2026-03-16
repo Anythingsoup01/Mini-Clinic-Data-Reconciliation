@@ -1,22 +1,8 @@
-
 #include "webserver.h"
-#include "llm_api.h"
 #include "routes/routes.h"
-#include "serializer.h"
-
-#include <iostream>
 
 int main(void) {
-  _Config config = LoadConfig();
-  if (config.ApiKey.empty()) {
-    return -1;
-  }
-
-  return 0;
-
-  LlmAPI::Init(config.ApiKey);
-
-  Webserver server(config.Port);
+  Webserver server;
 
   //
   //  GET
@@ -35,7 +21,6 @@ int main(void) {
 
   server.Run();
  
-  LlmAPI::Shutdown();
   return 0;
 
 }

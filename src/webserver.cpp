@@ -1,11 +1,13 @@
 #include "webserver.h"
 
-#include <string>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <unistd.h>
 
-std::string ReadFullRequest(int fd) {
+#include "llm_api.h"
+#include "serializer.h"
+
+static std::string ReadFullRequest(int fd) {
   std::string full_request;
   char buffer[4096];
   ssize_t bytes_received;
@@ -37,11 +39,42 @@ std::string ReadFullRequest(int fd) {
   return full_request;
 }
 
-Webserver::Webserver(uint16_t port) {
+static ResponseData GetData(int fd) {
+  ResponseData data;
+  std::string request = ReadFullRequest(fd);
+
+  if (request.length() <= 0) return {};
+
+  size_t spacePos = request.find_first_of(" ");
+
+  std::string methodStr = request.substr(0, spacePos);
+  data.Method = methodStr == "GET" ? _Method::GET : methodStr == "POST" ? _Method::POST : _Method::UNSUPPORTED;
+
+  data.Route = request.substr(spacePos + 1, request.find_first_of(" ", spacePos + 1) - spacePos - 1);
+
+  size_t pos = request.find("\r\n\r\n"); // HTTP header/body separator
+  if (pos != std::string::npos)
+    data.JsonData = request.substr(pos + 4);
+
+  // Even if it's unsupported, passing the data may still trigger something
+  if (data.Method == _Method::UNSUPPORTED) {
+    data.JsonData = "";
+    data.Route = "";
+  }
+
+  return data;
+
+}
+
+Webserver::Webserver() {
+  _Config config = LoadConfig();
+
+  LlmAPI::Init(config.ApiKey);
+
   m_FD = socket(AF_INET, SOCK_STREAM, 0);
   sockaddr_in address;
   address.sin_family=AF_INET;
-  address.sin_port=htons(port);
+  address.sin_port=htons(config.Port);
   address.sin_addr.s_addr = INADDR_ANY;
 
   int opt = 1;
@@ -52,6 +85,7 @@ Webserver::Webserver(uint16_t port) {
 }
 
 Webserver::~Webserver() {
+  LlmAPI::Shutdown();
   close(m_FD);
 }
 
@@ -72,27 +106,6 @@ void Webserver::HandleRoute(const _Method &method, const std::string &route, con
   }
 }
 
-ResponseData Webserver::GetData(int fd) {
-  ResponseData data;
-  std::string request = ReadFullRequest(fd);
-
-  if (request.length() <= 0) return {};
-
-  size_t spacePos = request.find_first_of(" ");
-
-  std::string methodStr = request.substr(0, spacePos);
-  data.Method = methodStr == "GET" ? _Method::GET : methodStr == "POST" ? _Method::POST : _Method::UNSUPPORTED;
-
-  data.Route = request.substr(spacePos + 1, request.find_first_of(" ", spacePos + 1) - spacePos - 1);
-
-  size_t pos = request.find("\r\n\r\n"); // HTTP header/body separator
-  if (pos != std::string::npos)
-    data.JsonData = request.substr(pos + 4);
-
-
-  return data;
-
-}
 
 void Webserver::Run() {
   while (true) {

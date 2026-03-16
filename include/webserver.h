@@ -1,6 +1,5 @@
 #pragma once
 
-#include <stdint.h>
 #include <functional>
 #include <unordered_map>
 #include <string>
@@ -19,15 +18,12 @@ struct ResponseData {
 
 class Webserver {
 public:
-  Webserver(uint16_t port);
+  Webserver();
   ~Webserver();
 
   void Run();
 
   void HandleRoute(const _Method &method, const std::string &route, const std::function<std::string(const std::string &)>& func);
-
-  ResponseData GetData(int fd);
-
 private:
   int m_FD;
   std::unordered_map<std::string, std::function<std::string(const std::string &)>> m_GETHandles;
