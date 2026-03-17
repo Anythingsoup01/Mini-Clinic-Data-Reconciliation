@@ -3,6 +3,7 @@
 #include <functional>
 #include <unordered_map>
 #include <string>
+#include <stdint.h>
 
 enum class _Method {
   UNSUPPORTED,
@@ -18,7 +19,7 @@ struct ResponseData {
 
 class Webserver {
 public:
-  Webserver();
+  Webserver(uint16_t port);
   ~Webserver();
 
   void Run();

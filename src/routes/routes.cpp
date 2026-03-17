@@ -26,8 +26,6 @@ static std::unordered_map<std::string, std::string> s_AuthorisedCredentials = {
   {"admin", "admin"}
 };
 
-
-
 std::string HandleHome(const std::string &jsonData) {
   return "HTTP/1.1 200 OK\r\n\r\n" + ReadFile("resources/html/index.html");
 }

@@ -1,8 +1,14 @@
 #include "webserver.h"
 #include "routes/routes.h"
+#include "llm_api.h"
+#include "serializer.h"
 
 int main(void) {
-  Webserver server;
+  _Config config = LoadConfig();
+
+  LlmAPI::Init(config.ApiKey);
+
+  Webserver server(config.Port);
 
   //
   //  GET
@@ -23,6 +29,8 @@ int main(void) {
   server.HandleRoute(_Method::POST, "/api/validate/data_quality", HandleValidateDataQuality);
 
   server.Run();
+
+  LlmAPI::Shutdown();
  
   return 0;
 

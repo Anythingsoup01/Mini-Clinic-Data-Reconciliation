@@ -4,8 +4,6 @@
 #include <netinet/in.h>
 #include <unistd.h>
 
-#include "llm_api.h"
-#include "serializer.h"
 
 static std::string ReadFullRequest(int fd) {
   std::string full_request;
@@ -66,15 +64,11 @@ static ResponseData GetData(int fd) {
 
 }
 
-Webserver::Webserver() {
-  _Config config = LoadConfig();
-
-  LlmAPI::Init(config.ApiKey);
-
+Webserver::Webserver(uint16_t port) {
   m_FD = socket(AF_INET, SOCK_STREAM, 0);
   sockaddr_in address;
   address.sin_family=AF_INET;
-  address.sin_port=htons(config.Port);
+  address.sin_port=htons(port);
   address.sin_addr.s_addr = INADDR_ANY;
 
   int opt = 1;
@@ -85,7 +79,6 @@ Webserver::Webserver() {
 }
 
 Webserver::~Webserver() {
-  LlmAPI::Shutdown();
   close(m_FD);
 }
 
