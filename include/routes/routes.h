@@ -6,7 +6,11 @@
 //  GET
 //
 
-std::string HandleRoot(const std::string &jsonData);
+std::string HandleHome(const std::string &jsonData);
+
+std::string HandleHomeStyles(const std::string &jsonData);
+
+std::string HandleHomeScripts(const std::string &jsonData);
 
 std::string HandleLogin(const std::string &jsonData);
 

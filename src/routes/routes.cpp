@@ -28,8 +28,16 @@ static std::unordered_map<std::string, std::string> s_AuthorisedCredentials = {
 
 
 
-std::string HandleRoot(const std::string &jsonData) {
+std::string HandleHome(const std::string &jsonData) {
   return "HTTP/1.1 200 OK\r\n\r\n" + ReadFile("resources/html/index.html");
+}
+
+std::string HandleHomeStyles(const std::string &jsonData) {
+  return "HTTP/1.1 200 OK\r\n\r\n" + ReadFile("resources/html/styles.css");
+}
+
+std::string HandleHomeScripts(const std::string &jsonData) {
+  return "HTTP/1.1 200 OK\r\n\r\n" + ReadFile("resources/html/scripts.js");
 }
 
 std::string HandleLogin(const std::string &jsonData) {

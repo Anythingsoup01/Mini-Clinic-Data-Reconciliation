@@ -1,0 +1,52 @@
+.page-content {
+  display: none;
+}
+
+.page-content.active {
+  display: block;
+}
+
+body {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+main {
+  flex: 1;
+}
+
+.tag-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  align-items: center;
+  border: 1px solid var(--pico-form-element-border-color);
+  padding: 0.5rem;
+  border-radius: 4px;
+  min-height: 50px;
+}
+
+.tag {
+  background: var(--pico-primary);
+  color: white;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+}
+
+.remove-btn {
+  margin-left: 6px;
+  cursor: pointer;
+}
+
+input, select {
+  margin-bottom: 0 !important;
+}
+
+.actions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 1rem;
+}

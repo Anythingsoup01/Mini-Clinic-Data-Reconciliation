@@ -39,26 +39,26 @@ void LlmAPI::Shutdown() {
 LlmResponseData LlmAPI::ParseJSON(const std::string &request, const std::string &jsonBody) {
   std::string readBuffer;
   std::string reconcilePrompt = R"**(
-    Constraint Strategy:
-    1. Output ONLY a valid JSON object. 
-    2. NO markdown, NO newlines, NO conversational text.
-    3. If input data contains quotes or special characters, they must be escaped according to RFC 8259, or replaced with a space if that preserves clarity.
-    4. If an error occurs, return {"error": "description_of_parsing_failure"}.
+    1. Output ONLY a valid JSON string. NO markdown, NO newlines, NO conversational filler.
+    2. NORMALIZE: All keys must be lowercase_with_underscores.
+    3. CONCISE DATA: 
+    - 'reasoning': Max 15 words. Focus strictly on source delta.
+    - 'recommended_actions': Max 2 items, max 10 words each.
+    4. If parsing fails, return {"error": "reason"}.
 
     JSON Schema:
     {
     "reconciled_medication": "string",
     "confidence_score": (0-100),
-    "reasoning": "string (Max 2 sentences. Focus on source reliability/recency. Strip all nested quotes from source data to prevent syntax breaks.)",
+    "reasoning": "string",
     "recommended_actions": ["string"],
     "clinical_safety_check": "PASSED|NEEDS ATTENTION|FAILED"
     }
 
-    Processing Logic:
-    1. Normalize Input: Strip all newlines and unescaped quotes from patient data before analysis.
-    2. Reconcile: Compare sources by recency and reliability.
-    3. Validate: Ensure the JSON object has NO internal line breaks.
-    4. Final Output: Strictly JSON string.
+    Task:
+    1. Reconcile input based on source reliability/recency.
+    2. Identify the most likely current prescription.
+    3. Ensure 'reasoning' and 'recommended_actions' are ultra-short to minimize latency.
 
     Patient Input Data:
   )**";

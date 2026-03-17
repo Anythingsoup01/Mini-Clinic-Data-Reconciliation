@@ -8,7 +8,10 @@ int main(void) {
   //  GET
   //
 
-  server.HandleRoute(_Method::GET, "/api/home", HandleRoot);
+  server.HandleRoute(_Method::GET, "/api/home", HandleHome);
+  server.HandleRoute(_Method::GET, "/api/styles.css", HandleHomeStyles);
+  server.HandleRoute(_Method::GET, "/api/scripts.js", HandleHomeScripts);
+
   server.HandleRoute(_Method::GET, "/api/login", HandleLogin);
   
   //
