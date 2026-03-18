@@ -1,9 +1,5 @@
 #pragma once
 
-#include <functional>
-#include <unordered_map>
-#include <string>
-#include <stdint.h>
 
 enum class _Method {
   UNSUPPORTED,

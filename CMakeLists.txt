@@ -12,6 +12,7 @@ set(SRCS
 add_executable(mini-clinic ${SRCS})
 set_property(TARGET mini-clinic PROPERTY CXX_STANDARD 20)
 
+target_precompile_headers(mini-clinic PUBLIC include/pch.h)
 target_include_directories(mini-clinic PRIVATE
     "include"
 )

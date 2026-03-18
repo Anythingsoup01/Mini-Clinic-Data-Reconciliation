@@ -8,6 +8,8 @@ Project = {
   language = "C++",
   dialect = "20",
 
+  pch = "include/pch.h",
+
   files = {
     "src/*.cpp"
   };

@@ -1,8 +1,7 @@
+#include "pch.h"
 #include "llm_api.h"
-#include <curl/curl.h>
 #include <nlohmann/json.hpp>
 
-#include <iostream>
 #include <sstream>
 #include <iomanip>
 
