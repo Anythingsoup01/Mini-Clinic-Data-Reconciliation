@@ -7,7 +7,7 @@
 
 #include <signal.h>
 
-Webserver server;
+Webserver m_Server;
 
 void signalHandler(int signum) {
   std::string msg = "Interrupt signal";
@@ -16,7 +16,7 @@ void signalHandler(int signum) {
   LogInfo("Server Stopped Running");
 
   LlmAPI::Shutdown();
-  server.Shutdown();
+  m_Server.Shutdown();
 
   exit(EXIT_SUCCESS);
 }
@@ -41,30 +41,28 @@ int main(void) {
   LogInfo("LLM Initialized");
 
 
-  server.Init(config.Port);
+  m_Server.Init(config.Port);
 
   //
   //  GET
   //
 
-  server.HandleRoute(_Method::GET, "/api/home", HandleHome);
-  server.HandleRoute(_Method::GET, "/api/styles.css", HandleHomeStyles);
-  server.HandleRoute(_Method::GET, "/api/scripts.js", HandleHomeScripts);
+  m_Server.HandleRoute(_Method::GET, "/api/home", HandleHome);
+  m_Server.HandleRoute(_Method::GET, "/api/styles.css", HandleHomeStyles);
+  m_Server.HandleRoute(_Method::GET, "/api/scripts.js", HandleHomeScripts);
 
-  server.HandleRoute(_Method::GET, "/api/login", HandleLogin);
+  m_Server.HandleRoute(_Method::GET, "/api/login", HandleLogin);
   
   //
   //  POST
   //
 
-  server.HandleRoute(_Method::POST, "/api/auth/login", HandleLoginLogic);
-  server.HandleRoute(_Method::POST, "/api/reconcile/medication", HandleReconcileMedication);
-  server.HandleRoute(_Method::POST, "/api/validate/data_quality", HandleValidateDataQuality);
+  m_Server.HandleRoute(_Method::POST, "/api/auth/login", HandleLoginLogic);
+  m_Server.HandleRoute(_Method::POST, "/api/reconcile/medication", HandleReconcileMedication);
+  m_Server.HandleRoute(_Method::POST, "/api/validate/data_quality", HandleValidateDataQuality);
 
   LogInfo("Server Running");
-  server.Run();
-
+  m_Server.Run();
  
   return 0;
-
 }
