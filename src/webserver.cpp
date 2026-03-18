@@ -4,6 +4,8 @@
 #include <netinet/in.h>
 #include <unistd.h>
 
+#include "log.h"
+
 
 static std::string ReadFullRequest(int fd) {
   std::string full_request;
@@ -58,13 +60,15 @@ static ResponseData GetData(int fd) {
   if (data.Method == _Method::UNSUPPORTED) {
     data.JsonData = "";
     data.Route = "";
+    std::string warning = "[Webserver;GetData] - Unsupported request detected '" + methodStr + "'";
+    LogWarning(warning.c_str());
   }
 
   return data;
 
 }
 
-Webserver::Webserver(uint16_t port) {
+bool Webserver::Init(uint16_t port) {
   m_FD = socket(AF_INET, SOCK_STREAM, 0);
   sockaddr_in address;
   address.sin_family=AF_INET;
@@ -74,29 +78,43 @@ Webserver::Webserver(uint16_t port) {
   int opt = 1;
   setsockopt(m_FD, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
   
-  bind(m_FD, (struct sockaddr *)&address, sizeof(address));
+  int success = bind(m_FD, (struct sockaddr *)&address, sizeof(address));
+  if (success != 0) {
+    LogError("[Webserver] - Bind Failed");
+    return false;
+  }
   listen(m_FD, 3);
+  return true;
 }
 
-Webserver::~Webserver() {
+void Webserver::Shutdown() {
   close(m_FD);
 }
 
 void Webserver::HandleRoute(const _Method &method, const std::string &route, const std::function<std::string(const std::string &)>& func) {
   switch (method) {
     case _Method::GET: {
-      if (m_GETHandles.contains(route)) return;
+      if (m_GETHandles.contains(route)) {
+        std::string warning = "[Webserver] - GET route '" + route + "' already exists!";
+        LogWarning(warning.c_str());
+        return;
+      }
       m_GETHandles[route] = func;
       break;
     }
     case _Method::POST: {
-      if (m_POSTHandles.contains(route)) return;
+      if (m_POSTHandles.contains(route)) {
+        std::string warning = "[Webserver] - POST route '" + route + "' already exists!";
+        LogWarning(warning.c_str());
+        return;
+      }
       m_POSTHandles[route] = func;
       break;
     }
     default:
-      break;
+      return;
   }
+
 }
 
 
@@ -104,7 +122,7 @@ void Webserver::Run() {
   while (true) {
     int client_fd = accept(m_FD, nullptr, nullptr);
     if (client_fd == -1) {
-      continue; 
+      continue;
     }
 
     ResponseData data = GetData(client_fd);

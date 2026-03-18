@@ -19,8 +19,8 @@ struct ResponseData {
 
 class Webserver {
 public:
-  Webserver(uint16_t port);
-  ~Webserver();
+  bool Init(uint16_t port);
+  void Shutdown();
 
   void Run();
 

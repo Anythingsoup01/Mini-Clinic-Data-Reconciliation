@@ -17,7 +17,7 @@ struct LlmResponseData {
 
 class LlmAPI {
 public:
-  static void Init(const std::string &apiKey);
+  static bool Init(const std::string &apiKey);
   static void Shutdown();
 
   static LlmResponseData ParseJSON(const std::string &request, const std::string &jsonBody);

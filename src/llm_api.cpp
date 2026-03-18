@@ -8,6 +8,8 @@
 
 #include <ctime>
 
+#include "log.h"
+
 size_t WriteCallback(void* contents, size_t size, size_t nmemb, std::string* s) {
     s->append((char*)contents, size * nmemb);
     return size * nmemb;
@@ -27,9 +29,11 @@ std::string json_escape(const std::string &s) {
     return o.str();
 }
 
-void LlmAPI::Init(const std::string &apiKey) {
+bool LlmAPI::Init(const std::string &apiKey) {
   m_CURL = curl_easy_init();
   m_ApiKey = apiKey;
+
+  return m_CURL;
 }
 
 void LlmAPI::Shutdown() {
@@ -102,68 +106,70 @@ LlmResponseData LlmAPI::ParseJSON(const std::string &request, const std::string 
     Input Data:
   )**";
 
-  if(m_CURL) {
-    std::string url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=" + m_ApiKey;
+  std::string url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=" + m_ApiKey;
 
-    std::string prompt = request == "RECONCILE" ? reconcilePrompt : request == "VALIDATE" ? validatePrompt : "{ \"error\": \"invalid backend prompt type\" }";
+  std::string prompt = request == "RECONCILE" ? reconcilePrompt : request == "VALIDATE" ? validatePrompt : "{ \"error\": \"invalid backend prompt type\" }";
 
-    if (prompt == "{ \"error\": \"invalid backend prompt type\" }") {
-      return {
-        LlmResponseCode::INVALID_PROMPT,
-        prompt
-      };
-    }
+  if (prompt == "{ \"error\": \"invalid backend prompt type\" }") {
+    LogWarning("[LlmAPI] - Invalid prompt type");
+    return {
+      LlmResponseCode::INVALID_PROMPT,
+      prompt
+    };
+  }
 
-    prompt += jsonBody;
+  prompt += jsonBody;
 
-    std::time_t now = std::time(nullptr); // time(NULL) also works
+  std::time_t now = std::time(nullptr); // time(NULL) also works
 
-    std::tm* local_time = std::localtime(&now);
+  std::tm* local_time = std::localtime(&now);
 
-    char buffer[80];
-    std::strftime(buffer, sizeof(buffer), "%Y-%m-%d", local_time); // Format: YYYY-MM-DD
+  char buffer[80];
+  std::strftime(buffer, sizeof(buffer), "%Y-%m-%d", local_time); // Format: YYYY-MM-DD
 
-    prompt += "\n\nCurrent Date:\nYYYY-MM-DD\n" + std::string(buffer);
+  prompt += "\n\nCurrent Date:\nYYYY-MM-DD\n" + std::string(buffer);
 
-    std::string json_body = "{\"contents\":[{\"parts\":[{\"text\":\"" + json_escape(prompt) + "\"}]}]}";
+  std::string json_body = "{\"contents\":[{\"parts\":[{\"text\":\"" + json_escape(prompt) + "\"}]}]}";
 
-    struct curl_slist* headers = NULL;
-    headers = curl_slist_append(headers, "Content-Type: application/json");
+  struct curl_slist* headers = NULL;
+  headers = curl_slist_append(headers, "Content-Type: application/json");
 
-    curl_easy_setopt(m_CURL, CURLOPT_URL, url.c_str());
-    curl_easy_setopt(m_CURL, CURLOPT_POSTFIELDS, json_body.c_str());
-    curl_easy_setopt(m_CURL, CURLOPT_HTTPHEADER, headers);
-    curl_easy_setopt(m_CURL, CURLOPT_WRITEFUNCTION, WriteCallback);
-    curl_easy_setopt(m_CURL, CURLOPT_WRITEDATA, &readBuffer);
+  curl_easy_setopt(m_CURL, CURLOPT_URL, url.c_str());
+  curl_easy_setopt(m_CURL, CURLOPT_POSTFIELDS, json_body.c_str());
+  curl_easy_setopt(m_CURL, CURLOPT_HTTPHEADER, headers);
+  curl_easy_setopt(m_CURL, CURLOPT_WRITEFUNCTION, WriteCallback);
+  curl_easy_setopt(m_CURL, CURLOPT_WRITEDATA, &readBuffer);
 
-    curl_easy_perform(m_CURL);
+  curl_easy_perform(m_CURL);
 
-    try {
+  try {
 
-      auto j = nlohmann::json::parse(readBuffer);
+    auto j = nlohmann::json::parse(readBuffer);
 
-      // 1. Check if the expected structure exists
-      if (j.contains("candidates") && j["candidates"].is_array() && !j["candidates"].empty()) {
-        auto& first_candidate = j["candidates"][0];
+    if (j.contains("candidates") && j["candidates"].is_array() && !j["candidates"].empty()) {
+      auto& first_candidate = j["candidates"][0];
 
-        // 2. Safely traverse deeper
-        if (first_candidate.contains("content") && 
-          first_candidate["content"].contains("parts") && 
-          !first_candidate["content"]["parts"].empty()) {
+      if (first_candidate.contains("content") && 
+        first_candidate["content"].contains("parts") && 
+        !first_candidate["content"]["parts"].empty()) {
 
-          std::string text = first_candidate["content"]["parts"][0].value("text", "");
-          return { LlmResponseCode::OK, text };
-        }
+        std::string text = first_candidate["content"]["parts"][0].value("text", "");
+        return { LlmResponseCode::OK, text };
       }
-
-      // If we reach here, the JSON was valid, but the structure wasn't what we expected
-      return { LlmResponseCode::PARSING_ERROR, "Unexpected JSON structure" };
-    } catch (const nlohmann::json::exception& e) {
-      return {
-        LlmResponseCode::PARSING_ERROR,
-        "{ \"code\": \"PARSING_ERROR\", \"message\": \"" + std::string(e.what()) + "\" }"
-      };
     }
+
+    // If we reach here, the JSON was valid, but the structure wasn't what we expected
+    std::string warning = "[LlmAPI] - LLM returned unexpected error '" + json_escape(j) + "'";
+    LogWarning(warning.c_str());
+    return {
+      LlmResponseCode::PARSING_ERROR,
+      "{\"code\": \"PARSING_ERROR\", \"message\": \"LLM Failed to process request and gave error, check server terminal!\"}" };
+
+  } catch (const nlohmann::json::exception& e) {
+    return {
+      LlmResponseCode::PARSING_ERROR,
+      "{ \"code\": \"PARSING_ERROR\", \"message\": \"" + std::string(e.what()) + "\" }"
+    };
   }
 
   return {

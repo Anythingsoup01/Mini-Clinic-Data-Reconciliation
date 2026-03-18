@@ -3,12 +3,45 @@
 #include "llm_api.h"
 #include "serializer.h"
 
+#include "log.h"
+
+#include <signal.h>
+
+Webserver server;
+
+void signalHandler(int signum) {
+  std::string msg = "Interrupt signal";
+  LogInfo(msg.c_str());
+
+  LogInfo("Server Stopped Running");
+
+  LlmAPI::Shutdown();
+  server.Shutdown();
+
+  exit(EXIT_SUCCESS);
+}
+
 int main(void) {
+
+  signal(SIGINT, signalHandler);
+
+  LogInfo("Loading Config");
   _Config config = LoadConfig();
+  if (config.ApiKey.empty()) {
+    LogError("Failed to load config, file missing or invalid field");
+    exit(EXIT_FAILURE);
+  }
+  LogInfo("Config Loaded");
 
-  LlmAPI::Init(config.ApiKey);
+  LogInfo("Initializing LLM");
+  if (!LlmAPI::Init(config.ApiKey)) {
+    LogError("LLM failed to initialize, exiting");
+    exit(EXIT_FAILURE);
+  }
+  LogInfo("LLM Initialized");
 
-  Webserver server(config.Port);
+
+  server.Init(config.Port);
 
   //
   //  GET
@@ -28,9 +61,9 @@ int main(void) {
   server.HandleRoute(_Method::POST, "/api/reconcile/medication", HandleReconcileMedication);
   server.HandleRoute(_Method::POST, "/api/validate/data_quality", HandleValidateDataQuality);
 
+  LogInfo("Server Running");
   server.Run();
 
-  LlmAPI::Shutdown();
  
   return 0;
 

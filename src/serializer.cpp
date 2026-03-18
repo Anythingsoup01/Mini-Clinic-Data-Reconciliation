@@ -10,7 +10,6 @@ _Config LoadConfig() {
   std::ifstream file(".config");
 
   if (!file.is_open()) {
-    printf("ERROR: Could not open config file\n");
     return config;
   }
 
