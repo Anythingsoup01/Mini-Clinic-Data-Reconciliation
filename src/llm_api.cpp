@@ -7,6 +7,7 @@
 #include <iomanip>
 
 #include <ctime>
+#include <format>
 
 #include "log.h"
 
@@ -43,11 +44,13 @@ void LlmAPI::Shutdown() {
 LlmResponseData LlmAPI::ParseJSON(const std::string &request, const std::string &jsonBody) {
   std::string readBuffer;
   std::string reconcilePrompt = R"**(
-    1. Output ONLY a valid JSON string. NO markdown, NO newlines, NO conversational filler.
-    2. NORMALIZE: All keys must be lowercase_with_underscores.
-    3. CONCISE DATA: 
-    - 'reasoning': Max 15 words. Focus strictly on source delta.
-    - 'recommended_actions': Max 2 items, max 10 words each.
+    Role: Clinical Data Extractor (JSON-Only).
+    Objective: Fast, structured extraction with zero conversational overhead.
+
+    Strict Extraction Rules:
+    1. OUTPUT: Single-line JSON only. No markdown, no whitespace, no preamble.
+    2. NORMALIZATION: All keys/fields must be lowercase_with_underscores.
+    3. LIMIT: 'issue' description must be under 10 words.
     4. If parsing fails, return {"error": "reason"}.
 
     JSON Schema:
@@ -59,49 +62,35 @@ LlmResponseData LlmAPI::ParseJSON(const std::string &request, const std::string 
     "clinical_safety_check": "PASSED|NEEDS ATTENTION|FAILED"
     }
 
-    Task:
-    1. Reconcile input based on source reliability/recency.
-    2. Identify the most likely current prescription.
-    3. Ensure 'reasoning' and 'recommended_actions' are ultra-short to minimize latency.
+    Logic:
+    - Reconcile input based on source reliability/recency.
+    - Identify the most likely current prescription.
+    - Ensure 'reasoning' and 'recommended_actions' are ultra-short to minimize latency.
 
     Patient Input Data:
   )**";
 
   std::string validatePrompt = R"**(
-    Role: Expert Clinical Data Analyser. 
-    Objective: Parse provided clinical data into a structured JSON report.
+    Role: Clinical Data Extractor (JSON-Only).
+    Objective: Fast, structured extraction with zero conversational overhead.
 
-    Normalization Protocol (MANDATORY):
-    - All field names from the input must be converted to lowercase and use underscores (e.g., "Blood Pressure" -> "blood_pressure").
-    - If the input contains "Vital Signs", map them to "vital_sign.[field_name]".
-
-    Strict Operational Rules:
-    1. STRICT DATA BINDING: You are prohibited from generating, inferring, or adding any fields not in the input, EXCEPT for mandatory structural checks.
-    2. ALLERGY VALIDATION: 'allergies' is a required field. If 'allergies' is missing or empty in the input, you MUST include an object in 'issues_detected' with: {"field": "allergies", "issue": "No allergies documented - likely incomplete", "severity": "medium"}.
-    3. Output ONLY raw, single-line JSON. No markdown, no backticks.
+    Strict Extraction Rules:
+    1. OUTPUT: Single-line JSON only. No markdown, no whitespace, no preamble.
+    2. NORMALIZATION: All keys/fields must be lowercase_with_underscores.
+    3. ALLERGY RULE: If 'allergies' is missing/empty, add: {"field":"allergies","issue":"missing","severity":"medium"}.
+    4. LIMIT: 'issue' description must be under 10 words.
 
     JSON Schema:
     {
-      "overall_score": 0,
-      "breakdown": {
-        "completeness": 0,
-        "accuracy": 0,
-        "timeliness": 0,
-        "clinical_plausibility": 0
-      },
-      "issues_detected": [
-        {
-          "field": "string",
-          "issue": "string",
-          "severity": "low|medium|high"
-        }
-      ]
+    "overall_score": 0,
+    "breakdown": {"completeness":0, "accuracy":0, "timeliness":0, "clinical_plausibility":0},
+    "issues_detected": [{"field":"string", "issue":"string", "severity":"low|medium|high"}]
     }
 
-    Logic Instructions:
-    - For 'last_updated': Calculate months elapsed from March 2026. If >= 6 months, severity is 'medium'. If >= 12 months, 'high'.
-    - Use format "vital_sign.[normalized_field_name]" only if the vital sign is present.
-    - If no other clinical issues are found, return an empty list or only the allergy issue if applicable.
+    Logic:
+    - Map "Vital Signs" to "vital_sign.[name]".
+    - Evaluate 'last_updated' against March 2026: (>=6mo=medium, >=12mo=high).
+    - No hallucinations: If not in input, do not include.
 
     Input Data:
   )**";
@@ -120,15 +109,6 @@ LlmResponseData LlmAPI::ParseJSON(const std::string &request, const std::string 
 
   prompt += jsonBody;
 
-  std::time_t now = std::time(nullptr); // time(NULL) also works
-
-  std::tm* local_time = std::localtime(&now);
-
-  char buffer[80];
-  std::strftime(buffer, sizeof(buffer), "%Y-%m-%d", local_time); // Format: YYYY-MM-DD
-
-  prompt += "\n\nCurrent Date:\nYYYY-MM-DD\n" + std::string(buffer);
-
   std::string json_body = "{\"contents\":[{\"parts\":[{\"text\":\"" + json_escape(prompt) + "\"}]}]}";
 
   struct curl_slist* headers = NULL;
@@ -140,7 +120,15 @@ LlmResponseData LlmAPI::ParseJSON(const std::string &request, const std::string 
   curl_easy_setopt(m_CURL, CURLOPT_WRITEFUNCTION, WriteCallback);
   curl_easy_setopt(m_CURL, CURLOPT_WRITEDATA, &readBuffer);
 
+  LogInfo("[LlmAPI] - Sending Request To Gemini");
+  auto start = std::chrono::steady_clock::now();
   curl_easy_perform(m_CURL);
+  auto end = std::chrono::steady_clock::now();
+
+  std::chrono::duration<double> elapsed = end - start;
+
+  std::string info = std::format("[LlmAPI] - Get Request From Gemini ({}s)", elapsed.count());
+  LogInfo(info.c_str());
 
   try {
 
@@ -166,11 +154,17 @@ LlmResponseData LlmAPI::ParseJSON(const std::string &request, const std::string 
       "{\"code\": \"PARSING_ERROR\", \"message\": \"LLM Failed to process request and gave error, check server terminal!\"}" };
 
   } catch (const nlohmann::json::exception& e) {
+    std::string error = e.what();
+    std::string warning = "[LlmAPI] - LLM returned parsing error '" + error + "'";
+    LogWarning(warning.c_str());
     return {
       LlmResponseCode::PARSING_ERROR,
-      "{ \"code\": \"PARSING_ERROR\", \"message\": \"" + std::string(e.what()) + "\" }"
+      "{ \"code\": \"PARSING_ERROR\", \"message\": \"" + error + "\" }"
     };
   }
+
+  std::string warning = "[LlmAPI::ParseJSON] - OUT OF BOUNDS";
+  LogWarning(warning.c_str());
 
   return {
     LlmResponseCode::OUT_OF_BOUNDS,

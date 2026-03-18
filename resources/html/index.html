@@ -167,9 +167,10 @@
             <input type="text" id="validate-last-updated" placeholder="YYYY-MM-DD">
           </article>
         </div>
-
-        <button onclick="submitValidation()">Complete Reconciliation</button>
-        <section id="validation-output">
+        <div class="grid">
+          <button onclick="submitValidation()">Complete Reconciliation</button>
+        </div>
+        <section id="validation-output" style="display: none;">
           <hr>
           <div class="grid">
             <article style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
