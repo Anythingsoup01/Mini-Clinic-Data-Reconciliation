@@ -41,19 +41,10 @@ void LlmAPI::Shutdown() {
 }
 
 LlmResponseData LlmAPI::ProcessPrompt(const std::string &prompt) {
-  std::string readBuffer;
-
   std::string url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=" + m_ApiKey;
-
-  if (prompt == "{ \"error\": \"invalid backend prompt type\" }") {
-    LogWarning("[LlmAPI] - Invalid prompt type");
-    return {
-      LlmResponseCode::INVALID_PROMPT,
-      prompt
-    };
-  }
-
   std::string json_body = "{\"contents\":[{\"parts\":[{\"text\":\"" + json_escape(prompt) + "\"}]}]}";
+
+  std::string readBuffer;
 
   struct curl_slist* headers = NULL;
   headers = curl_slist_append(headers, "Content-Type: application/json");
@@ -91,24 +82,21 @@ LlmResponseData LlmAPI::ProcessPrompt(const std::string &prompt) {
     }
 
     // If we reach here, the JSON was valid, but the structure wasn't what we expected
-    std::string warning = "[LlmAPI] - LLM returned unexpected error '" + json_escape(j) + "'";
-    LogWarning(warning.c_str());
+    LogWarning("[LlmAPI] - LLM returned unexpected error '" + json_escape(j) + "'");
     return {
       LlmResponseCode::PARSING_ERROR,
       "{\"code\": \"PARSING_ERROR\", \"message\": \"LLM Failed to process request and gave error, check server terminal!\"}" };
 
   } catch (const nlohmann::json::exception& e) {
     std::string error = e.what();
-    std::string warning = "[LlmAPI] - LLM returned parsing error '" + error + "'";
-    LogWarning(warning.c_str());
+    LogWarning("[LlmAPI] - LLM returned parsing error '" + error + "'");
     return {
       LlmResponseCode::PARSING_ERROR,
       "{ \"code\": \"PARSING_ERROR\", \"message\": \"" + error + "\" }"
     };
   }
 
-  std::string warning = "[LlmAPI::ParseJSON] - OUT OF BOUNDS";
-  LogWarning(warning.c_str());
+  LogWarning("[LlmAPI::ParseJSON] - OUT OF BOUNDS");
 
   return {
     LlmResponseCode::OUT_OF_BOUNDS,

@@ -10,8 +10,7 @@
 Webserver m_Server;
 
 void signalHandler(int signum) {
-  std::string msg = "Interrupt signal";
-  LogInfo(msg.c_str());
+  LogInfo("Signal Interrupt");
 
   LogInfo("Server Stopped Running");
 

@@ -95,8 +95,7 @@ void Webserver::HandleRoute(const _Method &method, const std::string &route, con
   switch (method) {
     case _Method::GET: {
       if (m_GETHandles.contains(route)) {
-        std::string warning = "[Webserver] - GET route '" + route + "' already exists!";
-        LogWarning(warning.c_str());
+        LogWarning("[Webserver] - GET route '" + route + "' already exists!");
         return;
       }
       m_GETHandles[route] = func;
@@ -104,8 +103,7 @@ void Webserver::HandleRoute(const _Method &method, const std::string &route, con
     }
     case _Method::POST: {
       if (m_POSTHandles.contains(route)) {
-        std::string warning = "[Webserver] - POST route '" + route + "' already exists!";
-        LogWarning(warning.c_str());
+        LogWarning("[Webserver] - POST route '" + route + "' already exists!");
         return;
       }
       m_POSTHandles[route] = func;
