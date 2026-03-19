@@ -40,63 +40,10 @@ void LlmAPI::Shutdown() {
   curl_easy_cleanup(m_CURL);
 }
 
-LlmResponseData LlmAPI::ParseJSON(const std::string &request, const std::string &jsonBody) {
+LlmResponseData LlmAPI::ProcessPrompt(const std::string &prompt) {
   std::string readBuffer;
-  std::string reconcilePrompt = R"**(
-    Role: Clinical Data Extractor (JSON-Only).
-    Objective: Fast, structured extraction with zero conversational overhead.
-
-    Strict Extraction Rules:
-    1. OUTPUT: Single-line JSON only. No markdown, no whitespace, no preamble.
-    2. NORMALIZATION: All keys/fields must be lowercase_with_underscores.
-    3. LIMIT: 'issue' description must be under 10 words.
-    4. If parsing fails, return {"error": "reason"}.
-
-    JSON Schema:
-    {
-    "reconciled_medication": "string",
-    "confidence_score": (0-100),
-    "reasoning": "string",
-    "recommended_actions": ["string"],
-    "clinical_safety_check": "PASSED|NEEDS ATTENTION|FAILED"
-    }
-
-    Logic:
-    - Reconcile input based on source reliability/recency.
-    - Identify the most likely current prescription.
-    - Ensure 'reasoning' and 'recommended_actions' are ultra-short to minimize latency.
-
-    Patient Input Data:
-  )**";
-
-  std::string validatePrompt = R"**(
-    Role: Clinical Data Extractor (JSON-Only).
-    Objective: Fast, structured extraction with zero conversational overhead.
-
-    Strict Extraction Rules:
-    1. OUTPUT: Single-line JSON only. No markdown, no whitespace, no preamble.
-    2. NORMALIZATION: All keys/fields must be lowercase_with_underscores.
-    3. ALLERGY RULE: If 'allergies' is missing/empty, add: {"field":"allergies","issue":"missing","severity":"medium"}.
-    4. LIMIT: 'issue' description must be under 10 words.
-
-    JSON Schema:
-    {
-    "overall_score": 0,
-    "breakdown": {"completeness":0, "accuracy":0, "timeliness":0, "clinical_plausibility":0},
-    "issues_detected": [{"field":"string", "issue":"string", "severity":"low|medium|high"}]
-    }
-
-    Logic:
-    - Map "Vital Signs" to "vital_sign.[name]".
-    - Evaluate 'last_updated' against March 2026: (>=6mo=medium, >=12mo=high).
-    - No hallucinations: If not in input, do not include.
-
-    Input Data:
-  )**";
 
   std::string url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=" + m_ApiKey;
-
-  std::string prompt = request == "RECONCILE" ? reconcilePrompt : request == "VALIDATE" ? validatePrompt : "{ \"error\": \"invalid backend prompt type\" }";
 
   if (prompt == "{ \"error\": \"invalid backend prompt type\" }") {
     LogWarning("[LlmAPI] - Invalid prompt type");
@@ -105,8 +52,6 @@ LlmResponseData LlmAPI::ParseJSON(const std::string &request, const std::string 
       prompt
     };
   }
-
-  prompt += jsonBody;
 
   std::string json_body = "{\"contents\":[{\"parts\":[{\"text\":\"" + json_escape(prompt) + "\"}]}]}";
 
