@@ -60,35 +60,21 @@ std::string HandleLoginLogic(const std::string &jsonData) {
 
 std::string HandleReconcileMedication(const std::string &jsonData) {
   std::string prompt = R"**(
-    Role: Clinical Data Reconciler (JSON-Only).
-    Objective: High-speed, prioritized medication reconciliation.
-
-    Reconciliation Hierarchy (MANDATORY):
-    1. PRIMARY: Source Reliability (High > Medium > Low).
-    2. SECONDARY: Recency (Latest date trumps older dates in the same tier).
-    3. CONFLICT: High-reliability sources override Low-reliability regardless of date.
+    Role: Clinical Data Extractor (JSON-Only).
+    Objective: Fast, structured extraction with zero conversational overhead.
 
     Strict Rules:
     1. OUTPUT: Raw single-line JSON only. No markdown, no whitespace, no preamble.
-    2. LIMITS: 'reasoning' (25 words). 'recommended_actions' (max 2 items, < 8 words each).
+    2. LIMITS: 'reasoning' <25 words. 'recommended_actions' max 2 items, < 8 words each.
     3. KEYS: lowercase_with_underscores.
 
-    Reasoning Requirement:
-    - Template: "[Source A] prioritized over [Source B] due to [Reliability/Recency]; [observation]."
+    Logic:
+    - Reconcile by Recency < Source Reliability.
+    - Tie-breaker: If dosage/frequency match across sources, prioritize by reliability in order: [1] High, [2] Medium, [3] Low
+    - Identify the most likely current prescription.
+    - Ensure 'reasoning' and 'recommended_actions' are ultra-short to minimize latency.
 
-    JSON Schema:
-    {
-    "reconciled_medication": "string",
-    "confidence_score": (0-100),
-    "reasoning": "string",
-    "recommended_actions": ["string"],
-    "clinical_safety_check": "PASSED|NEEDS ATTENTION|FAILED"
-    }
-
-    Task:
-    1. Reconcile input using the Hierarchy.
-    2. Draft the reasoning using the Comparison Template to ensure specific source attribution.
-    3. Output the JSON string.
+    JSON Schema: {"reconciled_medication":"str","confidence_score":int,"reasoning":"str","recommended_actions":["str"],"clinical_safety_check":"PASSED|NEEDS ATTENTION|FAILED"}
 
     Patient Input Data:
   )**";
@@ -108,22 +94,20 @@ std::string HandleValidateDataQuality(const std::string &jsonData) {
     Objective: Fast, structured extraction with zero conversational overhead.
 
     Strict Extraction Rules:
-    1. OUTPUT: Single-line JSON only. No markdown, no whitespace, no preamble.
-    2. NORMALIZATION: All keys/fields must be lowercase_with_underscores.
-    3. ALLERGY RULE: If 'allergies' is missing/empty, add: {"field":"allergies","issue":"missing","severity":"medium"}.
-    4. LIMIT: 'issue' description must be under 10 words.
+    - Output: Single-line JSON. No Markdown/preamble/whitespace.
+    - Case: lowercase_with_underscores.
+    - Date Reference: March 2026. (Age >=6mo: medium; >=12mo: high).
+
+    [MAPPING PROTOCOL]
+    - Scan for Vital Signs (e.g., BP, HR, Temp) -> Map to "vital_sign.[name]".
+    - Gap Check (Mandatory): 
+      - Out-of-Range: Any vital/value indicating clinical risk (e.g., BP >140/90, HR >100). Severity: high.
+      - Missing Data: If 'allergies' is null/empty. Severity: medium.
+      - Untreated: Any 'condition' lacking 'medication'. Issue: "Missing treatment. Recommend: [Med] [Dose]". Severity: high.
+    - Limit 'issue' descriptions to <10 words.
 
     JSON Schema:
-    {
-    "overall_score": 0,
-    "breakdown": {"completeness":0, "accuracy":0, "timeliness":0, "clinical_plausibility":0},
-    "issues_detected": [{"field":"string", "issue":"string", "severity":"low|medium|high"}]
-    }
-
-    Logic:
-    - Map "Vital Signs" to "vital_sign.[name]".
-    - Evaluate 'last_updated' against March 2026: (>=6mo=medium, >=12mo=high).
-    - No hallucinations: If not in input, do not include.
+    {"overall_score":(0-100),"breakdown":{"completeness":(0-100),"accuracy":(0-100),"timeliness":(0-100),"clinical_plausibility":(0-100)},"issues_detected":[{"field":"string","issue":"string","severity":"low|medium|high"}]}
 
     Input Data:
   )**";
