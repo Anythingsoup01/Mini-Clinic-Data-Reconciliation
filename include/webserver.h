@@ -1,6 +1,5 @@
 #pragma once
 
-
 enum class _Method {
   UNSUPPORTED,
   GET,

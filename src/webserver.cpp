@@ -5,8 +5,6 @@
 #include <netinet/in.h>
 #include <unistd.h>
 
-
-
 static std::string ReadFullRequest(int fd) {
   std::string full_request;
   char buffer[4096];
@@ -65,7 +63,6 @@ static ResponseData GetData(int fd) {
   }
 
   return data;
-
 }
 
 bool Webserver::Init(uint16_t port) {
@@ -112,7 +109,6 @@ void Webserver::HandleRoute(const _Method &method, const std::string &route, con
     default:
       return;
   }
-
 }
 
 
@@ -146,7 +142,6 @@ void Webserver::Run() {
     }
 
     send(client_fd, response.c_str(), response.size(), 0);
-
     close(client_fd);
   }
 }

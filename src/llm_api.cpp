@@ -1,12 +1,12 @@
 #include "pch.h"
 #include "llm_api.h"
-#include <nlohmann/json.hpp>
 
 #include <sstream>
 #include <iomanip>
-
 #include <ctime>
 #include <format>
+
+#include <nlohmann/json.hpp>
 
 #include "log.h"
 
@@ -102,5 +102,4 @@ LlmResponseData LlmAPI::ProcessPrompt(const std::string &prompt) {
     LlmResponseCode::OUT_OF_BOUNDS,
     "{ \"code\": \"OUT_OF_BOUNDS\", \"message\": \"Function 'ParseJSON' went out of bounds\" }"
   };
-
 }
